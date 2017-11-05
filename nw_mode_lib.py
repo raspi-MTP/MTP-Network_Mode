@@ -30,7 +30,8 @@ PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm 
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
 TDATA = TACK =  0.1                         # Data and ACK frames timeout (in seconds)
 TCTRL = TINIT = 0                           # Control frame and initialization random timeouts (in seconds)
-PLOAD_SIZE = 32                             # Payload size in one frame (32 B max)
+PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
+HDR_SIZE = 1                                # Header size inside payload frame
 PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
@@ -42,9 +43,9 @@ TEAM_D = "11"
 MY_TEAM = TEAM_C
 TX_POS = zeros(3)
 RX_POS = zeros(3)
+ACK = zeros(3)
 
-
-#### Function and class definitions ####
+#### Function definitions ####
 
 # COMMS initialization
 # Input: none
@@ -120,6 +121,25 @@ def generate_pkt(type, rx_id, payload):
                 return -1
             else:
                 frame_payload = list("1"+str(rx_id)+str(TX_POS(rx_id))+payload)     # Review how to concatenate strings and bits!!
+                return frame_payload
 
     else:
         # Control packet
+        # Payload = ACK1+ACK2+ACK3; NEXT previously updated
+        header = "0"+MY_TEAM+NEXT+"000"
+        frame_payload = list(header+str(ones[8]*ACK(0))+str(ones[8]*ACK(1))+str(ones[8]*ACK(2)))
+        return frame_payload+frame_payload                                                          # Payload repeated twice (8B < 32B)
+
+
+# Send given packet (frame payload)
+# Input:
+#       - Packet: payload field in frame to be sent
+# Output: OK (0) er ErrNum (-1)
+def send_pkt(packet):
+
+    if len(packet) > 32:
+        return -1
+
+    else:
+        radio_Tx.write(packet)      # Extra checks can be added (other errors may be possible)
+        return 0
