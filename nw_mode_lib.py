@@ -40,6 +40,8 @@ TEAM_B = "01"
 TEAM_C = "10"
 TEAM_D = "11"
 MY_TEAM = TEAM_C
+TX_POS = zeros(3)
+RX_POS = zeros(3)
 
 
 #### Function and class definitions ####
@@ -110,7 +112,14 @@ def generate_pkt(type, rx_id, payload):
 
     if type:
         # Data packet
-        # if (len(rx_id) != 2 or rx_id == MY_TEAM)
+        if (NO VALID RX ID):    # HOW TO CHECK IDs!!
+            return -1
+
+        else:
+            if len(payload) > (PLOAD_SIZE-HDR_SIZE):
+                return -1
+            else:
+                frame_payload = list("1"+str(rx_id)+str(TX_POS(rx_id))+payload)     # Review how to concatenate strings and bits!!
 
     else:
         # Control packet
