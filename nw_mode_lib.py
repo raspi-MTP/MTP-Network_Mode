@@ -22,6 +22,7 @@ import spidev
 from math import *
 
 
+
 #### Network parameters ####
 RF_CH = [0x50, 0x64]                        # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
@@ -44,6 +45,8 @@ MY_TEAM = TEAM_C
 TX_POS = zeros(3)
 RX_POS = zeros(3)
 ACK = zeros(3)
+
+
 
 #### Function definitions ####
 
