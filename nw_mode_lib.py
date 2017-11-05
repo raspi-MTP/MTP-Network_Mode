@@ -1,0 +1,92 @@
+#!/usr/bin/python
+
+# Network mode library with all required functions
+# to run NRF24L01 transceiver over Raspberry Pi and
+# communicate with others using TDM-type approach.
+
+# Brian Lavery's lib_nrf24.py library is used for
+# Raspberry Pi and "Virtual GPIO" configuration
+
+# MTP Team C. Fall 2017-18. ETSETB, Universitat Politècnica de Catalunya (UPC).
+
+
+
+
+#### Required libraries ####
+import sys
+import time
+import random
+from lib_nrf24 import NRF24
+import RPi.GPIO as GPIO
+import spidev
+from math import *
+
+
+#### Network parameters ####
+RF_CH = [0x50, 0x64]                        # UL & DL channels
+TX_CMPLT = RX_CMPLT = 0                     # Completed files
+TX = NEXT = "00"                            # Current and next TX
+PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
+BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
+TDATA = TACK =  0.1                         # Data and ACK frames timeout (in seconds)
+TCTRL = TINIT = 0                           # Control frame and initialization random timeouts (in seconds)
+PLOAD_SIZE = 32                             # Payload size in one frame (32 B max)
+PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
+PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
+GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
+GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
+
+
+#### Function and class definitions ####
+
+# COMMS initialization
+# Input: none
+# Output: OK (0) er ErrNum (-1)
+def init_comms():
+    
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(GPIO_RX, GPIO.OUT)
+    GPIO.output(GPIO_RX,1)
+    GPIO.setup(GPIO_TX, GPIO.OUT)
+    GPIO.output(GPIO_TX,1)
+
+    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
+    radio_Tx = NRF24(GPIO, spidev.SpiDev())
+    radio_Rx = NRF24(GPIO, spidev.SpiDev())
+    radio_Tx.begin(0, GPIO_TX)
+    radio_Rx.begin(1, GPIO_RX)
+
+    # Payload Size set to defined value
+    radio_Tx.setPayloadSize(PLOAD_SIZE)
+    radio_Rx.setPayloadSize(PLOAD_SIZE)
+
+    # We choose the channels to be used for one and the other transceiver
+    radio_Tx.setChannel(channel_TX)
+    radio_Rx.setChannel(channel_RX)
+
+    # Transmission Rate
+    radio_Tx.setDataRate(BRATE)
+    radio_Rx.setDataRate(BRATE)
+
+    # Configuration of the power level to be used by the transceiver
+    radio_Tx.setPALevel(PWR_LVL)
+    radio_Rx.setPALevel(PWR_LVL)
+
+    # Disabled Auto Acknowledgement
+    radio_Tx.setAutoAck(False)
+    radio_Rx.setAutoAck(False)
+    radio_Tx.enableDynamicPayloads()
+    radio_Rx.enableDynamicPayloads()
+
+    # Open the writing and reading pipe
+    radio_Tx.openWritingPipe(PIPE_TX)
+    radio_Rx.openReadingPipe(1, PIPE_RX)
+
+    return 0
+
+# Start network mode.
+# Input: none
+# Output: OK (0) er ErrNum (-1)
+def function():
+
+    return 0
