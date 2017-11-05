@@ -35,6 +35,11 @@ PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
+TEAM_A = "00"
+TEAM_B = "01"
+TEAM_C = "10"
+TEAM_D = "11"
+MY_TEAM = TEAM_C
 
 
 #### Function and class definitions ####
@@ -43,7 +48,7 @@ GPIO_RX = 24                                # RX transceiver's CE to Raspberry G
 # Input: none
 # Output: OK (0) er ErrNum (-1)
 def init_comms():
-    
+
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(GPIO_RX, GPIO.OUT)
     GPIO.output(GPIO_RX,1)
@@ -84,9 +89,28 @@ def init_comms():
 
     return 0
 
-# Start network mode.
+
+# Start network mode. Set a value to initial random timer.
 # Input: none
 # Output: OK (0) er ErrNum (-1)
-def function():
+def start_network():
 
+    random.seed(None, 2)
+    TINIT = random.uniform(5,10)
     return 0
+
+
+# Given a payload dataset, the packet is arranged to be conformed to standard definitions.
+# Input:
+#       - Type: Control (0) or Data (1)
+#       - RX_ID: Only for data packets, receiver ID
+#       - Payload: Bytes corresponding to data, ACKs for control or file data
+# Output: Packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
+def generate_pkt(type, rx_id, payload):
+
+    if type:
+        # Data packet
+        # if (len(rx_id) != 2 or rx_id == MY_TEAM)
+
+    else:
+        # Control packet
