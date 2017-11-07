@@ -49,6 +49,12 @@ ACK = zeros(3)
 
 
 
+#### Radio interfaces ####
+radio_Tx = NRF24(GPIO, spidev.SpiDev())
+radio_Rx = NRF24(GPIO, spidev.SpiDev())
+
+
+
 #### Classes and function definitions ####
 
 # COMMS initialization
@@ -62,8 +68,6 @@ def init_comms():
     GPIO.output(GPIO_TX,1)
 
     # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
-    radio_Tx = NRF24(GPIO, spidev.SpiDev())
-    radio_Rx = NRF24(GPIO, spidev.SpiDev())
     radio_Tx.begin(0, GPIO_TX)
     radio_Rx.begin(1, GPIO_RX)
 
@@ -86,6 +90,12 @@ def init_comms():
     # Disabled Auto Acknowledgement
     radio_Tx.setAutoAck(False)
     radio_Rx.setAutoAck(False)
+
+    # Enable CRC 16b
+    radio_Tx.setCRCLength(NRF24.CRC_16)
+    radio_Tx.setCRCLength(NRF24.CRC_16)
+
+    # Dynamic payload size
     radio_Tx.enableDynamicPayloads()
     radio_Rx.enableDynamicPayloads()
 
@@ -103,13 +113,17 @@ def start_network():
     random.seed(None, 2)
     TINIT = random.uniform(5,10)
 
-    # Option 1
+    # Disable CRC for Control packets
+    # radio_Tx.disableCRC()
+    # radio_Rx.disableCRC()
+
+    # Start timer
     start_time = time.time()
     while(time.time()<start_time+TINIT):
         if radio_Rx.available(0):
             # Packet received, check it
             packet = PKT()
-            packet = read_pkt()
+            packet.read_pkt()
 
 
     return 0
@@ -149,7 +163,7 @@ class PKT:
     #       - Type: Control (0) or Data (1)
     #       - RX_ID: Only for data packets, receiver ID
     #       - Payload: Bytes corresponding to data, ACKs for control or file data
-    # Output: OK (0) er ErrNum (-1). Generated packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
+    # Output: OK (0) er ErrNum. Generated packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
     def generate_pkt(self, typ, payload, rx_id=0):
         if typ:
             # Data packet
@@ -159,7 +173,7 @@ class PKT:
 
             else:
                 if len(payload) > (PLOAD_SIZE-HDR_SIZE):
-                    return -1
+                    return -2
                 else:
                     self.typ = typ
                     self.header = 128+(rx_id<<5)+TX_POS(rx_id)
@@ -182,6 +196,19 @@ class PKT:
 
     # Read input packet from RF interface
     # Input: none
-    # Output: Packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
+    # Output: OK (0) er ErrNum. Received packet, corresponding to transceiver's frame payload field
     def read_pkt():
-            
+        frame = []
+        radio_Rx.read(frame, radio_Rx.getDynamicPayloadSize())
+
+        if(len(frame) < 2):
+            return -1
+
+        else:
+            self.header = ord(frame[0])
+            if(self.header < 128):
+                # Control packet
+                tx_id = 
+
+            else:
+                # Data packet
