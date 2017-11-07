@@ -187,10 +187,10 @@ class PKT:
             # Header = 0 + MY_TEAM_ID + NEXT_ID + 000 (Reserved flags); NEXT previously updated.
             # Payload = ACK0+ACK1+ACK2 (1B each)
             self.typ = typ
-            self.header = 0+(MY_TEAM<<5)+(NEXT<<3)
-            self.payload = chr(255*ACK(0))+chr(255*ACK(1))+chr(255*ACK(2))
-            self.payloadLength = 3
-            self.frameData = list(chr(self.header)+self.payload)  
+            self.header = 0+(MY_TEAM<<5)+(NEXT<<3)+(ACK[0]<<2)+(ACK[1]<<1)+ACK[0]
+            self.payload = ""
+            self.payloadLength = 0
+            self.frameData = list(chr(self.header))  
             return 0
 
 
@@ -201,14 +201,17 @@ class PKT:
         frame = []
         radio_Rx.read(frame, radio_Rx.getDynamicPayloadSize())
 
-        if(len(frame) < 2):
+        if(len(frame) < 1):
+            # Empty frame
             return -1
 
         else:
             self.header = ord(frame[0])
             if(self.header < 128):
                 # Control packet
-                tx_id = 
+                TX = self.header >> 5
+                NEXT = self.header >> 3
+
 
             else:
                 # Data packet
