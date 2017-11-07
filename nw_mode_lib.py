@@ -45,8 +45,8 @@ TX = MY_TEAM                                # TX for current time slot
 NEXT = TEAM_D                               # TX for next time slot
 TX_POS = zeros(3)
 RX_POS = zeros(3)
-ACK = zeros(3)
-
+TX_ACK = zeros(3)
+RX_ACK = zeros(3)
 
 
 #### Radio interfaces ####
@@ -187,7 +187,7 @@ class PKT:
             # Header = 0 + MY_TEAM_ID + NEXT_ID + 000 (Reserved flags); NEXT previously updated.
             # Payload = ACK0+ACK1+ACK2 (1B each)
             self.typ = typ
-            self.header = 0+(MY_TEAM<<5)+(NEXT<<3)+(ACK[0]<<2)+(ACK[1]<<1)+ACK[0]
+            self.header = 0+(MY_TEAM<<5)+(NEXT<<3)+(RX_ACK[0]<<2)+(RX_ACK[1]<<1)+RX_ACK[0]
             self.payload = ""
             self.payloadLength = 0
             self.frameData = list(chr(self.header))  
@@ -209,9 +209,19 @@ class PKT:
             self.header = ord(frame[0])
             if(self.header < 128):
                 # Control packet
-                TX = self.header >> 5
-                NEXT = self.header >> 3
+                TX = hdr >> 5
+                NEXT = (self.header >> 3)
+                if(TX == 0):
+                    # Team A
 
+                elif(TX==1):
+                    # Team B
+
+                elif(TX==2):
+                    # Team C
+
+                elif(TX==3):
+                    # Team D
 
             else:
                 # Data packet
