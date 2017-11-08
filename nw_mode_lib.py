@@ -130,19 +130,6 @@ def start_network():
 
 
 
-# Send given packet (frame payload)
-# Input:
-#       - Packet: payload field in frame to be sent (total size <= 32B)
-# Output: OK (0) er ErrNum (-1)
-def send_pkt(packet):
-    if packet.payloadLength > PLOAD_SIZE-HDR_SIZE:
-        return -1
-
-    else:
-        radio_Tx.write(packet)      # Extra checks can be added (other errors may be possible)
-        return 0
-
-
 # Packet class type. It includes:
 #       - Type: control (0) or data (1)
 #       - Header: flags and identifiers before payload (chr)
@@ -197,32 +184,65 @@ class PKT:
     # Read input packet from RF interface
     # Input: none
     # Output: OK (0) er ErrNum. Received packet, corresponding to transceiver's frame payload field
-    def read_pkt():
-        frame = []
-        radio_Rx.read(frame, radio_Rx.getDynamicPayloadSize())
+    def read_pkt(self):
+        self.frameData = []
+        radio_Rx.read(self.frameData, radio_Rx.getDynamicPayloadSize())
 
-        if(len(frame) < 1):
+        if(len(self.frameData) < 1):
             # Empty frame
             return -1
 
         else:
-            self.header = ord(frame[0])
+            self.header = ord(self.frameData[0])
             if(self.header < 128):
-                # Control packet
-                TX = hdr >> 5
-                NEXT = (self.header >> 3)
+                # Control packet                    DISCARD IF ALREADY ACK ANOTHER TX!!!
+                self.typ = 0
+                TX = self.header >> 5
+                NEXT = (self.header >> 3) ^ (TX << 2)
+                self.payload = ""
+                self.payloadLength = 0
                 if(TX == 0):
-                    # Team A
+                    # Team A --> ACK order: B, C, D --> header[6]
+                    TX_ACK[0] = (self.header&2)/2
 
                 elif(TX==1):
-                    # Team B
+                    # Team B --> ACK order: A, C, D --> header[6]
+                    TX_ACK[1] = (self.header&2)/2
 
                 elif(TX==2):
-                    # Team C
+                    # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
 
                 elif(TX==3):
-                    # Team D
+                    # Team D --> ACK order: A, B, C --> header[7]
+                    TX_ACK[2] = self.header&1
+
+                else:
+                    # Never here
 
             else:
                 # Data packet
-                ####
+                self.typ = 1
+                if(len(self.frameData) < 2):
+                    # Empty data
+                    self.payload = ""
+                    self.payloadLength = 0
+                    return -2
+
+                else:
+                    self.payload = str(self.frameData[1:])
+                    self.payloadLength = len(self.payload)
+
+
+
+
+    # Send given packet (frame payload)
+    # Input:
+    #       - Packet: payload field in frame to be sent (total size <= 32B)
+    # Output: OK (0) er ErrNum (-1)
+    def send_pkt(self):
+        if packet.payloadLength > PLOAD_SIZE-HDR_SIZE:
+            return -1
+
+        else:
+            radio_Tx.write(self.frameData)      # Extra checks can be added (other errors may be possible)
+            return 0
