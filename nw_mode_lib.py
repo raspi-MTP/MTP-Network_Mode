@@ -59,7 +59,7 @@ radio_Rx = NRF24(GPIO, spidev.SpiDev())
 
 # COMMS initialization
 # Input: none
-# Output: OK (0) er ErrNum (-1)
+# Output: OK (0) or ErrNum (-1)
 def init_comms():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(GPIO_RX, GPIO.OUT)
@@ -108,7 +108,7 @@ def init_comms():
 
 # Start network mode. Set a value to initial random timer. Wait until TINIT or CTRL received.
 # Input: none
-# Output: OK (0) er ErrNum (-1)
+# Output: OK (0) or ErrNum (-1)
 def start_network():
     random.seed(None, 2)
     TINIT = random.uniform(5,10)
@@ -119,12 +119,19 @@ def start_network():
 
     # Start timer
     start_time = time.time()
-    while(time.time()<start_time+TINIT):
-        if radio_Rx.available(0):
-            # Packet received, check it
-            packet = PKT()
-            packet.read_pkt()
+    while(not radio_RX.available(0) or time.time()<start_time+TINIT):
+        sleep(0.2)
 
+    packet = PKT()
+    if radio_Rx.available(0):
+        # Packet received, check it
+        packet.read_pkt()
+        #########
+
+    else:
+        # Timeout, send control
+        packet.generate_pkt(0)
+        packet.send_pkt()
 
     return 0
 
@@ -149,9 +156,9 @@ class PKT:
     # Input:
     #       - Type: Control (0) or Data (1)
     #       - RX_ID: Only for data packets, receiver ID
-    #       - Payload: Bytes corresponding to data, ACKs for control or file data
-    # Output: OK (0) er ErrNum. Generated packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
-    def generate_pkt(self, typ, payload, rx_id=0):
+    #       - Payload: Bytes corresponding to data, (ACKs for control or file data)
+    # Output: OK (0) or ErrNum. Generated packet (of size PLOAD_SIZE), corresponding to transceiver's frame payload field
+    def generate_pkt(self, typ, payload="", rx_id=0):
         if typ:
             # Data packet
             # Header = 1 + RX_ID + TX_POS(RX_ID)
@@ -183,7 +190,7 @@ class PKT:
 
     # Read input packet from RF interface
     # Input: none
-    # Output: OK (0) er ErrNum. Received packet, corresponding to transceiver's frame payload field
+    # Output: OK (0) or ErrNum. Received packet (self), corresponding to transceiver's frame payload field
     def read_pkt(self):
         self.frameData = []
         radio_Rx.read(self.frameData, radio_Rx.getDynamicPayloadSize())
@@ -234,11 +241,10 @@ class PKT:
 
 
 
-
     # Send given packet (frame payload)
     # Input:
-    #       - Packet: payload field in frame to be sent (total size <= 32B)
-    # Output: OK (0) er ErrNum (-1)
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: OK (0) or ErrNum (-1)
     def send_pkt(self):
         if packet.payloadLength > PLOAD_SIZE-HDR_SIZE:
             return -1
@@ -246,3 +252,11 @@ class PKT:
         else:
             radio_Tx.write(self.frameData)      # Extra checks can be added (other errors may be possible)
             return 0
+
+
+
+    # Receive an ACK to Control frames (NOT DATA ACK)
+    # Input:
+    #       - Packet: payload field in frame to be sent (total size <= 32B)
+    # Output: OK (0) if minimum ACKs received or ErrNum if not(-1).
+    def receive_ack(self):
