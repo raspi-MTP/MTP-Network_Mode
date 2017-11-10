@@ -36,8 +36,8 @@ PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
-WAITING_DATA = False                            # Flag to know whether data frame is expected or control, otherwise
-SEND_CTRL = False                               # Flag to know if control frame must be sent
+WAITING_DATA = False                        # Flag to know whether data frame is expected or control, otherwise
+SEND_CTRL = False                           # Flag to know if control frame must be sent
 TEAM_A = 0
 TEAM_B = 1
 TEAM_C = 2
@@ -123,7 +123,7 @@ def start_network():                # main_network
     # Start timer
     start_time = time.time()
 
-    while(not radio_Rx.available(0) or time.time()<start_time+TINIT):
+    while(not radio_Rx.available(0) or time.time() < (start_time + TINIT)):
         sleep(0.2)
 
     if(not radio_Rx.available(0)):
@@ -187,7 +187,6 @@ def start_network():                # main_network
 
 
         return 0
-
 
 
 # Packet class type. It includes:
@@ -296,7 +295,6 @@ class PKT:
                     self.payloadLength = len(self.payload)
 
 
-
     # Send given packet (frame payload)
     # Input:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
@@ -310,7 +308,6 @@ class PKT:
             return 0
 
 
-
     # Check if packet is ACK
     # Input:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
@@ -319,14 +316,12 @@ class PKT:
         return(packet.typ == 0 and (packet.header>>5)==TX)
 
 
-
     # Check if packet is control
     # Input:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_ACK(self):
         return(packet.typ == 0)
-
 
 
     # Check if packet is data
@@ -341,10 +336,9 @@ class PKT:
     # Input:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
     # Output: Yes (1) or No (0)
-    def is_data(self):
+    def is_my_data(self):
         if(packet.is_data()):
             # Check if RX is me !!!!!!!!
-
 
 
     # Check if data and expected position
@@ -355,10 +349,9 @@ class PKT:
         return(packet.is_data() and (packet.header&(0b00011111))==RX_POS[TX]+1)
 
 
-
 # Receive an ACK to Control frames (NOT DATA ACK)
 # Input:  None
-# Output: True when min ACKs received (1) or Fales if not (0).
+# Output: True when min ACKs received (1) or False if not (0).
 def receive_acks():
     acks = 0
     start_time = time.time()
@@ -385,10 +378,9 @@ def receive_acks():
         return 1
 
 
-
 # Receive an ACK to Control frames
 # Input:  None
-# Output: True when control received (1) or Fales if not (0).
+# Output: True when control received (1) or False if not (0).
 def receive_ctrl():
     TCTRL = random.uniform(1,2)
     ctrl_rx = False
@@ -415,8 +407,9 @@ def receive_ctrl():
         return 0
 
 
-
-# blablablba
+# Wait and read data frames
+# Input:  None
+# Output: True when MY data is received (1) or False if not (0).
 def receive_data():
     acks = 0
     start_time = time.time()
@@ -442,7 +435,6 @@ def receive_data():
 
     else:
         return 0
-
 
 
 # KASDEWFHEFHWEIJ
