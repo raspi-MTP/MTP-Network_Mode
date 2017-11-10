@@ -36,6 +36,7 @@ PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
+WAITING_DATA = 0                            # Flag to know is data frame is expected or control, otherwise
 TEAM_A = 0
 TEAM_B = 1
 TEAM_C = 2
@@ -58,7 +59,7 @@ radio_Rx = NRF24(GPIO, spidev.SpiDev())
 #### Classes and function definitions ####
 
 # COMMS initialization
-# Input: none
+# Input:  None
 # Output: OK (0) or ErrNum (-1)
 def init_comms():
     GPIO.setmode(GPIO.BCM)
@@ -107,7 +108,7 @@ def init_comms():
 
 
 # Start network mode. Set a value to initial random timer. Wait until TINIT or CTRL received.
-# Input: none
+# Input:  None
 # Output: OK (0) or ErrNum (-1)
 def start_network():
     random.seed(None, 2)
@@ -119,7 +120,7 @@ def start_network():
 
     # Start timer
     start_time = time.time()
-    while(not radio_RX.available(0) or time.time()<start_time+TINIT):
+    while(not radio_Rx.available(0) or time.time()<start_time+TINIT):
         sleep(0.2)
 
     packet = PKT()
@@ -189,7 +190,7 @@ class PKT:
 
 
     # Read input packet from RF interface
-    # Input: none
+    # Input:  None
     # Output: OK (0) or ErrNum. Received packet (self), corresponding to transceiver's frame payload field
     def read_pkt(self):
         self.frameData = []
@@ -202,29 +203,32 @@ class PKT:
         else:
             self.header = ord(self.frameData[0])
             if(self.header < 128):
-                # Control packet                    DISCARD IF ALREADY ACK ANOTHER TX!!!
-                self.typ = 0
-                TX = self.header >> 5
-                NEXT = (self.header >> 3) ^ (TX << 2)
-                self.payload = ""
-                self.payloadLength = 0
-                if(TX == 0):
-                    # Team A --> ACK order: B, C, D --> header[6]
-                    TX_ACK[0] = (self.header&2)/2
-
-                elif(TX==1):
-                    # Team B --> ACK order: A, C, D --> header[6]
-                    TX_ACK[1] = (self.header&2)/2
-
-                elif(TX==2):
-                    # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
-
-                elif(TX==3):
-                    # Team D --> ACK order: A, B, C --> header[7]
-                    TX_ACK[2] = self.header&1
-
+                # Control packet
+                if(WAITING_DATA):
+                    return -2
                 else:
-                    # Never here
+                    self.typ = 0
+                    TX = self.header >> 5
+                    NEXT = (self.header >> 3) ^ (TX << 2)
+                    self.payload = ""
+                    self.payloadLength = 0
+                    if(TX == 0):
+                        # Team A --> ACK order: B, C, D --> header[6]
+                        TX_ACK[0] = (self.header&2)/2
+
+                    elif(TX==1):
+                        # Team B --> ACK order: A, C, D --> header[6]
+                        TX_ACK[1] = (self.header&2)/2
+
+                    elif(TX==2):
+                        # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
+
+                    elif(TX==3):
+                        # Team D --> ACK order: A, B, C --> header[7]
+                        TX_ACK[2] = self.header&1
+
+                    else:
+                        # Never here
 
             else:
                 # Data packet
@@ -255,8 +259,30 @@ class PKT:
 
 
 
-    # Receive an ACK to Control frames (NOT DATA ACK)
-    # Input:
-    #       - Packet: payload field in frame to be sent (total size <= 32B)
-    # Output: OK (0) if minimum ACKs received or ErrNum if not(-1).
-    def receive_ack(self):
+# Receive an ACK to Control frames (NOT DATA ACK)
+# Input:  None
+# Output: OK (0) if minimum ACKs received or ErrNum if not(-1).
+def receive_acks():
+    acks = 0
+
+    start_time = time.time()
+    while(acks < 3 or time.time()<start_time+TACK)
+        while(not radio_Rx.available(0) or time.time()<start_time+TACK):
+            # sleep(0.1)
+        
+        if(radio_Rx.available(0)):
+            packet = PKT()
+            packet.read_pkt()
+            if(packet.typ == 0 and (packet.header>>5)==TX):
+                # ACK to current Tx
+                acks += 1
+
+            else:
+                # Discarded. Do nothing.
+
+    if(acks < 2):
+        # Channel not won
+        return -1
+
+    else:
+        return 0
