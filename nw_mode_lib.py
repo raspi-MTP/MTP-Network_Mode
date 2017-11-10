@@ -289,7 +289,7 @@ def receive_acks():
 
 
 
-# Receive an ACK to Control frames (NOT DATA ACK)
+# Receive an ACK to Control frames
 # Input:  None
 # Output: OK (0) if correct control frame received or ErrNum if not (-1).
 def receive_ctrl():
