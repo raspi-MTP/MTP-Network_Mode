@@ -36,7 +36,8 @@ PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
-WAITING_DATA = 0                            # Flag to know is data frame is expected or control, otherwise
+WAITING_DATA = False                            # Flag to know whether data frame is expected or control, otherwise
+SEND_CTRL = False                               # Flag to know if control frame must be sent
 TEAM_A = 0
 TEAM_B = 1
 TEAM_C = 2
@@ -44,10 +45,11 @@ TEAM_D = 3
 MY_TEAM = TEAM_C
 TX = MY_TEAM                                # TX for current time slot
 NEXT = TEAM_D                               # TX for next time slot
-TX_POS = zeros(3)
-RX_POS = zeros(3)
-TX_ACK = zeros(3)
-RX_ACK = zeros(3)
+TX_POS = zeros(4)
+RX_POS = zeros(4)
+TX_ACK = zeros(4)
+RX_ACK = zeros(4)
+
 
 
 #### Radio interfaces ####
@@ -110,8 +112,8 @@ def init_comms():
 # Start network mode. Set a value to initial random timer. Wait until TINIT or CTRL received.
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
-def start_network():
-    random.seed(None, 2)
+def start_network():                # main_network
+    random.seed(54321)
     TINIT = random.uniform(5,10)
 
     # Disable CRC for Control packets
@@ -120,21 +122,71 @@ def start_network():
 
     # Start timer
     start_time = time.time()
+
     while(not radio_Rx.available(0) or time.time()<start_time+TINIT):
         sleep(0.2)
 
-    packet = PKT()
-    if radio_Rx.available(0):
-        # Packet received, check it
-        packet.read_pkt()
-        #########
+    if(not radio_Rx.available(0)):
+        SEND_CTRL = 1
 
-    else:
-        # Timeout, send control
-        packet.generate_pkt(0)
-        packet.send_pkt()
+    while(True):                    # Check files sent/received
+        if SEND_CTRL:
+            # Send control (maybe TINIT or TCTRL)
+            packet.generate_pkt(0)
+            packet.send_pkt()
 
-    return 0
+            # Wait for ACKs
+            if(receive_acks()):
+                # 2 or 3 ACKs received
+                # send_data()  -->  x3 packetS
+
+            else:
+                # Timeout or less than 2 ACKs
+                # Wait control
+
+        else:
+            if(WAITING_DATA):
+                # Data frame to be received
+                packet = PKT()
+                if(receive_data()):
+                    # Data received
+                    # ACK = 1 for TX data
+                    RX_ACK[TX] = 1
+
+                else:
+                    # Timeout TDATA
+                    # ACK = 0 for TX data
+                    RX_ACK[TX] = 1
+
+                WAITING_DATA = False
+                if(i_am_next()):
+                    TX = MY_TEAM
+                    NEXT = TEAM_D
+                    SEND_CTRL = True
+
+                else:
+                    SEND_CTRL = False
+
+
+                # After TDATA --> WAITING DATA = False
+
+            else:
+                # Control frame to be received
+                if(receive_ctrl()):
+                    # Control received
+                    t_send_ack = random.uniform(0,0.02)
+                    time.sleep(t_send_ack)
+                    # Send ACK
+                    #############
+                    WAITING_DATA = True
+
+                else:
+                    # Timeout
+                    SEND_CTRL = True
+                    continue
+
+
+        return 0
 
 
 
@@ -212,18 +264,18 @@ class PKT:
                     NEXT = (self.header >> 3) ^ (TX << 2)
                     self.payload = ""
                     self.payloadLength = 0
-                    if(TX == 0):
+                    if(TX == TEAM_A):
                         # Team A --> ACK order: B, C, D --> header[6]
                         TX_ACK[0] = (self.header&2)/2
 
-                    elif(TX==1):
+                    elif(TX == TEAM_B):
                         # Team B --> ACK order: A, C, D --> header[6]
                         TX_ACK[1] = (self.header&2)/2
 
-                    elif(TX==2):
+                    elif(TX == TEAM_C):
                         # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
 
-                    elif(TX==3):
+                    elif(TX == TEAM_D):
                         # Team D --> ACK order: A, B, C --> header[7]
                         TX_ACK[2] = self.header&1
 
@@ -259,9 +311,54 @@ class PKT:
 
 
 
+    # Check if packet is ACK
+    # Input:
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: Yes (1) or No (0)
+    def is_ACK(self):
+        return(packet.typ == 0 and (packet.header>>5)==TX)
+
+
+
+    # Check if packet is control
+    # Input:
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: Yes (1) or No (0)
+    def is_ACK(self):
+        return(packet.typ == 0)
+
+
+
+    # Check if packet is data
+    # Input:
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: Yes (1) or No (0)
+    def is_data(self):
+        return(packet.typ == 1)
+
+
+    # Check if packet is MY data
+    # Input:
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: Yes (1) or No (0)
+    def is_data(self):
+        if(packet.is_data()):
+            # Check if RX is me !!!!!!!!
+
+
+
+    # Check if data and expected position
+    # Input:
+    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    # Output: Yes (1) or No (0)
+    def is_expected_data(self):
+        return(packet.is_data() and (packet.header&(0b00011111))==RX_POS[TX]+1)
+
+
+
 # Receive an ACK to Control frames (NOT DATA ACK)
 # Input:  None
-# Output: OK (0) if minimum ACKs received or ErrNum if not (-1).
+# Output: True when min ACKs received (1) or Fales if not (0).
 def receive_acks():
     acks = 0
     start_time = time.time()
@@ -272,7 +369,7 @@ def receive_acks():
         if(radio_Rx.available(0)):
             packet = PKT()
             packet.read_pkt()
-            if(packet.typ == 0 and (packet.header>>5)==TX):
+            if(packet.is_ACK()):
                 # ACK to current Tx
                 acks += 1
 
@@ -281,16 +378,73 @@ def receive_acks():
 
     if(acks < 2):
         # Channel not won
-        return -1
+        return 0
 
     else:
         # Recognised as winner. Data can be sent.
-        return 0
+        return 1
 
 
 
 # Receive an ACK to Control frames
 # Input:  None
-# Output: OK (0) if correct control frame received or ErrNum if not (-1).
+# Output: True when control received (1) or Fales if not (0).
 def receive_ctrl():
-    
+    TCTRL = random.uniform(1,2)
+    ctrl_rx = False
+
+    start_time = time.time()
+    # While if still not TCTRL but something (wrong) received
+    while(time.time()<start_time+TCTRL and not ctrl_rx):
+        while(not radio_Rx.available(0)):
+            # sleep(0.2)
+
+        if(radio_Rx.available(0)):
+            # Something received
+            packet = PKT()
+            packet.read_pkt()
+            if(packet.is_CTRL()):
+                # Control Received
+                ctrl_rx = True
+
+    if(ctrl_rx):
+        # Received control
+        return 1
+    else:
+        # Timeout
+        return 0
+
+
+
+# blablablba
+def receive_data():
+    acks = 0
+    start_time = time.time()
+    while(not data_ok or time.time()<start_time+TACK)
+        while(not radio_Rx.available(0) or time.time()<start_time+TACK):
+            # sleep(0.1)
+        
+        if(radio_Rx.available(0)):
+            packet = PKT()
+            packet.read_pkt()
+            if(packet.is_my_data()):
+                # Data received
+                data_ok = True
+                if (packet.is_expected_data()):
+                    # Position + 1 for TX
+                    RX_POS[TX] += 1
+
+            else:
+                # Discarded. Do nothing.
+
+    if(data_ok):
+        return 1
+
+    else:
+        return 0
+
+
+
+# KASDEWFHEFHWEIJ
+def i_am_next():
+    # TO DO
