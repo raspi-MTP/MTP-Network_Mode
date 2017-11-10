@@ -56,7 +56,7 @@ radio_Rx = NRF24(GPIO, spidev.SpiDev())
 
 
 
-#### Classes and function definitions ####
+#### Class and function definitions ####
 
 # COMMS initialization
 # Input:  None
@@ -261,10 +261,9 @@ class PKT:
 
 # Receive an ACK to Control frames (NOT DATA ACK)
 # Input:  None
-# Output: OK (0) if minimum ACKs received or ErrNum if not(-1).
+# Output: OK (0) if minimum ACKs received or ErrNum if not (-1).
 def receive_acks():
     acks = 0
-
     start_time = time.time()
     while(acks < 3 or time.time()<start_time+TACK)
         while(not radio_Rx.available(0) or time.time()<start_time+TACK):
@@ -285,4 +284,13 @@ def receive_acks():
         return -1
 
     else:
+        # Recognised as winner. Data can be sent.
         return 0
+
+
+
+# Receive an ACK to Control frames (NOT DATA ACK)
+# Input:  None
+# Output: OK (0) if correct control frame received or ErrNum if not (-1).
+def receive_ctrl():
+    
