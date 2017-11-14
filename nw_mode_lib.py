@@ -440,3 +440,36 @@ def receive_data():
 # KASDEWFHEFHWEIJ
 def i_am_next():
     # TO DO
+
+
+### Data is extracted from text file to be sent. Index provides the position to start (fixed size packets). ### 
+### Input: text file, index
+### Output: data payload
+def generate_data(index = 0, text_file, pkt):
+
+    f = open(text_file,"r")
+    y = f.read()
+    text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y) # convert the text into binary, in 8-bit format 
+    f.close()
+    # len_text = len(text_in_bin)
+
+    payload = PLOAD_SIZE - 1
+    len_packet = payload * 8 # convert it to bits
+    # num_packets_to_send = len_text/len_packet
+
+    data = text_in_bin[index * len_packet : index * len_packet + len_packet - 1] # a partition of length len_packet of the text_file is taken
+    pkt.payload = data # save data in the payload of the packet (NO SÉ SI ES NECESARIO HACERLO AQUÍ)
+
+### Data added to the end of a given file.
+### Input: text file, data
+### Output: OK or ErrNum
+def append_data(text_file, data):
+
+    if(len(data) < 1): # Empty string
+        return -1
+
+    f = open(text_file,"a") # open file to append something
+    for j in data: f.write(j) # write in file
+    f.close()
+
+    return 0
