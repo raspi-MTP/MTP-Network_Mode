@@ -132,6 +132,7 @@ def start_network():                # main_network
     while(True):                    # Check files sent/received
         if SEND_CTRL:
             # Send control (maybe TINIT or TCTRL)
+            packet = PKT()
             packet.generate_pkt(0)
             packet.send_pkt()
 
@@ -190,7 +191,7 @@ def start_network():                # main_network
 
 
 # Packet class type. It includes:
-#       - Type: control (0) or data (1)
+#       - Type: control (0) or data (1) (int)
 #       - Header: flags and identifiers before payload (chr)
 #       - Payload: packet data (string)
 #       - Payload Length: int with total length of payload (int in B)
@@ -222,10 +223,10 @@ class PKT:
                     return -2
                 else:
                     self.typ = typ
-                    self.header = 128+(rx_id<<5)+TX_POS(rx_id)
+                    self.header = chr(128+(rx_id<<5)+TX_POS(rx_id))
                     self.payload = payload
                     self.payloadLength = len(payload)
-                    self.frameData = list(chr(self.header)+self.payload)   
+                    self.frameData = list(self.header+self.payload)   
                     return 0
 
         else:
@@ -233,10 +234,10 @@ class PKT:
             # Header = 0 + MY_TEAM_ID + NEXT_ID + 000 (Reserved flags); NEXT previously updated.
             # Payload = ACK0+ACK1+ACK2 (1B each)
             self.typ = typ
-            self.header = 0+(MY_TEAM<<5)+(NEXT<<3)+(RX_ACK[0]<<2)+(RX_ACK[1]<<1)+RX_ACK[0]
+            self.header = chr(0+(MY_TEAM<<5)+(NEXT<<3)+(RX_ACK[0]<<2)+(RX_ACK[1]<<1)+RX_ACK[2])
             self.payload = ""
             self.payloadLength = 0
-            self.frameData = list(chr(self.header))  
+            self.frameData = list(self.header)
             return 0
 
 
@@ -259,27 +260,34 @@ class PKT:
                     return -2
                 else:
                     self.typ = 0
-                    TX = self.header >> 5
-                    NEXT = (self.header >> 3) ^ (TX << 2)
-                    self.payload = ""
-                    self.payloadLength = 0
-                    if(TX == TEAM_A):
-                        # Team A --> ACK order: B, C, D --> header[6]
-                        TX_ACK[0] = (self.header&2)/2
+                    # Check if ACK is expected (I am TX) or CTRL (I am RX) !!!!!!!!!!
+                    if(self.is_ACK()):
+                        # ACK to me
+                        TX = MY_TEAM
+                        NEXT = TEAM_D
 
-                    elif(TX == TEAM_B):
-                        # Team B --> ACK order: A, C, D --> header[6]
-                        TX_ACK[1] = (self.header&2)/2
+                    else: 
+                        TX = self.header >> 5
+                        NEXT = (self.header >> 3) ^ (TX << 2)
+                        self.payload = ""
+                        self.payloadLength = 0
+                        if(TX == TEAM_A):
+                            # Team A --> ACK order: B, C, D --> header[6]
+                            TX_ACK[0] = (self.header&2)/2
 
-                    elif(TX == TEAM_C):
-                        # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
+                        elif(TX == TEAM_B):
+                            # Team B --> ACK order: A, C, D --> header[6]
+                            TX_ACK[1] = (self.header&2)/2
 
-                    elif(TX == TEAM_D):
-                        # Team D --> ACK order: A, B, C --> header[7]
-                        TX_ACK[2] = self.header&1
+                        elif(TX == TEAM_C):
+                            # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
 
-                    else:
-                        # Never here
+                        elif(TX == TEAM_D):
+                            # Team D --> ACK order: A, B, C --> header[7]
+                            TX_ACK[2] = self.header&1
+
+                        else:
+                            # Never here
 
             else:
                 # Data packet
@@ -288,7 +296,7 @@ class PKT:
                     # Empty data
                     self.payload = ""
                     self.payloadLength = 0
-                    return -2
+                    return -3
 
                 else:
                     self.payload = str(self.frameData[1:])
@@ -320,7 +328,7 @@ class PKT:
     # Input:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
     # Output: Yes (1) or No (0)
-    def is_ACK(self):
+    def is_control(self):
         return(packet.typ == 0)
 
 
@@ -337,8 +345,7 @@ class PKT:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_my_data(self):
-        if(packet.is_data()):
-            # Check if RX is me !!!!!!!!
+            return(packet.is_data() and (packet.header>>5)==MY_TEAM)
 
 
     # Check if data and expected position
@@ -347,6 +354,11 @@ class PKT:
     # Output: Yes (1) or No (0)
     def is_expected_data(self):
         return(packet.is_data() and (packet.header&(0b00011111))==RX_POS[TX]+1)
+
+
+    # sgrbd
+    def tx_ctrl(self):
+        return self.header >> 5
 
 
 # Receive an ACK to Control frames (NOT DATA ACK)
@@ -413,7 +425,7 @@ def receive_ctrl():
 def receive_data():
     acks = 0
     start_time = time.time()
-    while(not data_ok or time.time()<start_time+TACK)
+    while(not data_ok or time.time()<start_time+TACK):
         while(not radio_Rx.available(0) or time.time()<start_time+TACK):
             # sleep(0.1)
         
