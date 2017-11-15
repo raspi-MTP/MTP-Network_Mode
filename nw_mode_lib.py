@@ -109,10 +109,10 @@ def init_comms():
     return 0
 
 
-# Start network mode. Set a value to initial random timer. Wait until TINIT or CTRL received.
+# Network mode.
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
-def start_network():                # main_network
+def network_main():
     random.seed(54321)
     TINIT = random.uniform(5,10)
 
