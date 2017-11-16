@@ -28,7 +28,7 @@ RF_CH = [0x50, 0x64]                        # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
 PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
-TDATA = TACK =  0.1                         # Data and ACK frames timeout (in seconds)
+TDATA = TACK =  0.2                         # Data and ACK frames timeout (in seconds)
 TCTRL = TINIT = 0                           # Control frame and initialization random timeouts (in seconds)
 PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
 HDR_SIZE = 1                                # Header size inside payload frame
@@ -49,6 +49,7 @@ TX_POS = zeros(4)
 RX_POS = zeros(4)
 TX_ACK = zeros(4)
 RX_ACK = zeros(4)
+POS_MAX = 17
 
 
 
@@ -137,19 +138,20 @@ def network_main():
             packet.send_pkt()
 
             # Wait for ACKs
-            if(receive_acks()):
+            if(received_acks()):
                 # 2 or 3 ACKs received
-                # send_data()  -->  x3 packetS
+                send_data()
 
             else:
-                # Timeout or less than 2 ACKs
-                # Wait control
+                # Timeout (less than 2 ACKs), wait control.
+            
+            SEND_CTRL = False
 
         else:
             if(WAITING_DATA):
                 # Data frame to be received
                 packet = PKT()
-                if(receive_data()):
+                if(received_data()):
                     # Data received
                     # ACK = 1 for TX data
                     RX_ACK[TX] = 1
@@ -173,9 +175,9 @@ def network_main():
 
             else:
                 # Control frame to be received
-                if(receive_ctrl()):
+                if(received_ctrl()):
                     # Control received
-                    t_send_ack = random.uniform(0,0.02)
+                    t_send_ack = random.uniform(0,0.1)
                     time.sleep(t_send_ack)
                     # Send ACK
                     #############
@@ -260,34 +262,36 @@ class PKT:
                     return -2
                 else:
                     self.typ = 0
-                    # Check if ACK is expected (I am TX) or CTRL (I am RX) !!!!!!!!!!
                     if(self.is_ACK()):
-                        # ACK to me
-                        TX = MY_TEAM
-                        NEXT = TEAM_D
+                        # ACK to MY_TEAM
+                        # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
 
-                    else: 
-                        TX = self.header >> 5
-                        NEXT = (self.header >> 3) ^ (TX << 2)
-                        self.payload = ""
-                        self.payloadLength = 0
-                        if(TX == TEAM_A):
-                            # Team A --> ACK order: B, C, D --> header[6]
-                            TX_ACK[0] = (self.header&2)/2
-
-                        elif(TX == TEAM_B):
-                            # Team B --> ACK order: A, C, D --> header[6]
-                            TX_ACK[1] = (self.header&2)/2
-
-                        elif(TX == TEAM_C):
-                            # Team C --> ACK order: A, B, D --> It's us! (CTRL ACK)
-
-                        elif(TX == TEAM_D):
-                            # Team D --> ACK order: A, B, C --> header[7]
-                            TX_ACK[2] = self.header&1
-
+                    else:
+                        if(SEND_CTRL):
+                            # Discard, someone is trying to win our channel
                         else:
-                            # Never here
+                            # We are in RX mode waiting for someone's control
+                            TX = self.header >> 5
+                            NEXT = (self.header >> 3) ^ (TX << 2)
+                            self.payload = ""
+                            self.payloadLength = 0
+                            if(TX == TEAM_A):
+                                # Team A --> ACK order: B, C, D --> header[6]
+                                TX_ACK[0] = (self.header&2)/2
+
+                            elif(TX == TEAM_B):
+                                # Team B --> ACK order: A, C, D --> header[6]
+                                TX_ACK[1] = (self.header&2)/2
+
+                            elif(TX == TEAM_C):
+                                # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
+
+                            elif(TX == TEAM_D):
+                                # Team D --> ACK order: A, B, C --> header[7]
+                                TX_ACK[2] = self.header&1
+
+                            else:
+                                # Never here
 
             else:
                 # Data packet
@@ -318,7 +322,7 @@ class PKT:
 
     # Check if packet is ACK
     # Input:
-    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    #       - Packet (self): payload field in a frame (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_ACK(self):
         return(packet.typ == 0 and (packet.header>>5)==TX)
@@ -326,7 +330,7 @@ class PKT:
 
     # Check if packet is control
     # Input:
-    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    #       - Packet (self): payload field in a frame (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_control(self):
         return(packet.typ == 0)
@@ -334,7 +338,7 @@ class PKT:
 
     # Check if packet is data
     # Input:
-    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    #       - Packet (self): payload field in a frame (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_data(self):
         return(packet.typ == 1)
@@ -342,7 +346,7 @@ class PKT:
 
     # Check if packet is MY data
     # Input:
-    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    #       - Packet (self): payload field in a frame (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_my_data(self):
             return(packet.is_data() and (packet.header>>5)==MY_TEAM)
@@ -350,21 +354,24 @@ class PKT:
 
     # Check if data and expected position
     # Input:
-    #       - Packet (self): payload field in frame to be sent (total size <= 32B)
+    #       - Packet (self): payload field in a frame (total size <= 32B)
     # Output: Yes (1) or No (0)
     def is_expected_data(self):
         return(packet.is_data() and (packet.header&(0b00011111))==RX_POS[TX]+1)
 
 
-    # sgrbd
+    # Check who is next in control packet
+    # Input:
+    #   - Packet (self): payload field in a frame (total size <= 32B)
+    # Output: TX value.
     def tx_ctrl(self):
         return self.header >> 5
 
 
-# Receive an ACK to Control frames (NOT DATA ACK)
+# Receive ACKs to Control frames (NOT DATA ACK)
 # Input:  None
 # Output: True when min ACKs received (1) or False if not (0).
-def receive_acks():
+def received_acks():
     acks = 0
     start_time = time.time()
     while(acks < 3 or time.time()<start_time+TACK)
@@ -383,17 +390,17 @@ def receive_acks():
 
     if(acks < 2):
         # Channel not won
-        return 0
+        return False
 
     else:
         # Recognised as winner. Data can be sent.
-        return 1
+        return True
 
 
 # Receive an ACK to Control frames
 # Input:  None
 # Output: True when control received (1) or False if not (0).
-def receive_ctrl():
+def received_ctrl():
     TCTRL = random.uniform(1,2)
     ctrl_rx = False
 
@@ -413,16 +420,16 @@ def receive_ctrl():
 
     if(ctrl_rx):
         # Received control
-        return 1
+        return True
     else:
         # Timeout
-        return 0
+        return False
 
 
 # Wait and read data frames
 # Input:  None
 # Output: True when MY data is received (1) or False if not (0).
-def receive_data():
+def received_data():
     acks = 0
     start_time = time.time()
     while(not data_ok or time.time()<start_time+TACK):
@@ -443,45 +450,82 @@ def receive_data():
                 # Discarded. Do nothing.
 
     if(data_ok):
-        return 1
+        return True
 
     else:
-        return 0
+        return False
 
 
-# KASDEWFHEFHWEIJ
+# Check if MY_TEAM is next to transmit
+# Input: None
+# Output : True or False
 def i_am_next():
-    # TO DO
+    return NEXT == MY_TEAM
 
 
-### Data is extracted from text file to be sent. Index provides the position to start (fixed size packets). ### 
-### Input: text file, index
-### Output: data payload
+# Data is extracted from text file to be sent. Index provides the position to start (fixed size packets). ### 
+# Input:
+#       - Text file: object associated to reading file
+#       - Index: position to be read, i.e. packet number (int)
+# Output: Payload data string
 def generate_data(index = 0, text_file, pkt):
 
-    f = open(text_file,"r")
-    y = f.read()
-    text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y) # convert the text into binary, in 8-bit format 
-    f.close()
+    # CHECK FILES FROM SINGLE MODE (deviceTX_2_0.py for example). I THINK IT IS MUCH EASIER :)
+    y = text_file.read()
+    text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y)             # Convert the text into binary, in 8-bit format 
     # len_text = len(text_in_bin)
 
     payload = PLOAD_SIZE - 1
-    len_packet = payload * 8 # convert it to bits
+    len_packet = payload * 8                                                    # Convert size to bits
     # num_packets_to_send = len_text/len_packet
 
     data = text_in_bin[index * len_packet : index * len_packet + len_packet - 1] # a partition of length len_packet of the text_file is taken
-    pkt.payload = data # save data in the payload of the packet (NO SÉ SI ES NECESARIO HACERLO AQUÍ)
 
-### Data added to the end of a given file.
-### Input: text file, data
-### Output: OK or ErrNum
+    return data
+
+
+# Data added to the end of a given file.
+# Input:
+#       - Text file: object associated to writing file
+#       - Data: string to be added at the end of the file
+# Output: OK or ErrNum
 def append_data(text_file, data):
 
-    if(len(data) < 1): # Empty string
+    if(len(data) < 1):          # Empty string
         return -1
 
-    f = open(text_file,"a") # open file to append something
-    for j in data: f.write(j) # write in file
+    f = open(text_file,"a")     # Open file to append something
+    for j in data: f.write(j)   # Write in file
     f.close()
 
     return 0
+
+
+# Send data to N(=3) receivers
+# Input: None
+# Output: OK (0) or ErrNum
+def send_data():
+    # Sending to team A
+    packet = PKT()
+    if TX_POS[0] < POS_MAX:
+        f = open("text_file_A.txt","r")
+        payload = generate_data(TX_POS[0], f)
+        packet.generate_pkt(1, payload, 0)
+        packet.send_pkt()
+        f.close()
+
+    # Sending to team B
+    if TX_POS[1] < POS_MAX:
+        f = open("text_file_B.txt","r")
+        payload = generate_data(TX_POS[1], f)
+        packet.generate_pkt(1, payload, 1)
+        packet.send_pkt()
+        f.close()
+
+    # Sending to team C
+    if TX_POS[2] < POS_MAX:
+        f = open("text_file_C.txt","r")
+        payload = generate_data(TX_POS[2], f)
+        packet.generate_pkt(1, payload, 1)
+        packet.send_pkt()
+        f.close()
