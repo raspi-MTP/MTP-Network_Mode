@@ -20,6 +20,7 @@ from lib_nrf24 import NRF24
 import RPi.GPIO as GPIO
 import spidev
 from math import *
+import os.path
 
 
 
@@ -303,7 +304,7 @@ class PKT:
                     return -3
 
                 else:
-                    self.payload = str(self.frameData[1:])
+                    self.payload = ''.join(self.frameData[1:])
                     self.payloadLength = len(self.payload)
 
 
@@ -445,6 +446,7 @@ def received_data():
                 if (packet.is_expected_data()):
                     # Position + 1 for TX
                     RX_POS[TX] += 1
+                    store_data(TX, packet.payload)
                     if(RX_POS[TX] == POS_MAX):
                             RX_CMPLT += 1
 
@@ -496,9 +498,9 @@ def append_data(text_file, data):
     if(len(data) < 1):          # Empty string
         return -1
 
-    f = open(text_file,"a")     # Open file to append something
+    #f = open(text_file,"a")     # Open file to append something
     for j in data: f.write(j)   # Write in file
-    f.close()
+    #f.close()
 
     return 0
 
@@ -524,10 +526,43 @@ def send_data():
         packet.send_pkt()
         f.close()
 
-    # Sending to team C
-    if TX_POS[2] < POS_MAX:
-        f = open("text_file_C.txt","r")
+    # Sending to team D
+    if TX_POS[3] < POS_MAX:
+        f = open("text_file_D.txt","r")
         payload = generate_data(TX_POS[2], f)
         packet.generate_pkt(1, payload, 1)
         packet.send_pkt()
         f.close()
+
+    return 0
+
+# Store data to N(=3) receivers
+# Input:
+#       - TX: transmitter ID
+#       - Payload: data to add to file (str)
+# Output: OK (0) or ErrNum
+def store_data(tx, payload):
+    # File from team A
+    if tx == TEAM_A:
+        file_str = "rx_text_file_A.txt"
+
+    # File from team B
+    elif tx == TEAM_B:
+        file_str = "rx_text_file_A.txt"
+
+    # File from team D
+    elif tx == TEAM_D:
+        file_str = "rx_text_file_A.txt"
+
+    else:
+        return -1
+
+    if os.path.isfile(file_str):
+        f = open(file_str, "a")
+    else:
+        f = open(file_str, "w")
+
+    append_data(f, payload)
+    f.close()
+
+    return 0
