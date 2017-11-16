@@ -294,6 +294,9 @@ class PKT:
                             else:
                                 # Never here
 
+                            if(TX_ACK[TX] and TX_POS[TX]==POS_MAX)
+                                TX_CMPLT += 1
+
             else:
                 # Data packet
                 self.typ = 1
