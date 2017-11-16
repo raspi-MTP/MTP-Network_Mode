@@ -30,6 +30,7 @@ PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm 
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
 TDATA = TACK =  0.2                         # Data and ACK frames timeout (in seconds)
 TCTRL = TINIT = 0                           # Control frame and initialization random timeouts (in seconds)
+TMAX = 120                                  # Max time for network mode (in seconds)
 PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
 HDR_SIZE = 1                                # Header size inside payload frame
 PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
@@ -128,9 +129,9 @@ def network_main():
         sleep(0.2)
 
     if(not radio_Rx.available(0)):
-        SEND_CTRL = 1
+        SEND_CTRL = True
 
-    while(True):                    # Check files sent/received
+    while(TX_CMPLT < 3 and RX_CMPLT < 3 and time.time() < (start_time + TMAX)):
         if SEND_CTRL:
             # Send control (maybe TINIT or TCTRL)
             packet = PKT()
@@ -139,7 +140,7 @@ def network_main():
 
             # Wait for ACKs
             if(received_acks()):
-                # 2 or 3 ACKs received
+                # 2 or 3 ACKs received.
                 send_data()
 
             else:
@@ -159,7 +160,7 @@ def network_main():
                 else:
                     # Timeout TDATA
                     # ACK = 0 for TX data
-                    RX_ACK[TX] = 1
+                    RX_ACK[TX] = 0
 
                 WAITING_DATA = False
                 if(i_am_next()):
@@ -171,12 +172,10 @@ def network_main():
                     SEND_CTRL = False
 
 
-                # After TDATA --> WAITING DATA = False
-
             else:
                 # Control frame to be received
                 if(received_ctrl()):
-                    # Control received
+                    # Control received. TX and NEXT updated.
                     t_send_ack = random.uniform(0,0.1)
                     time.sleep(t_send_ack)
                     # Send ACK
@@ -185,11 +184,12 @@ def network_main():
 
                 else:
                     # Timeout
+                    TX = MY_TEAM
+                    NEXT = TEAM_D
                     SEND_CTRL = True
-                    continue
 
 
-        return 0
+    return 0
 
 
 # Packet class type. It includes:
@@ -323,7 +323,7 @@ class PKT:
     # Check if packet is ACK
     # Input:
     #       - Packet (self): payload field in a frame (total size <= 32B)
-    # Output: Yes (1) or No (0)
+    # Output: True or False.
     def is_ACK(self):
         return(packet.typ == 0 and (packet.header>>5)==TX)
 
@@ -331,7 +331,7 @@ class PKT:
     # Check if packet is control
     # Input:
     #       - Packet (self): payload field in a frame (total size <= 32B)
-    # Output: Yes (1) or No (0)
+    # Output: True or False.
     def is_control(self):
         return(packet.typ == 0)
 
@@ -339,7 +339,7 @@ class PKT:
     # Check if packet is data
     # Input:
     #       - Packet (self): payload field in a frame (total size <= 32B)
-    # Output: Yes (1) or No (0)
+    # Output: True or False.
     def is_data(self):
         return(packet.typ == 1)
 
@@ -347,7 +347,7 @@ class PKT:
     # Check if packet is MY data
     # Input:
     #       - Packet (self): payload field in a frame (total size <= 32B)
-    # Output: Yes (1) or No (0)
+    # Output: True or False.
     def is_my_data(self):
             return(packet.is_data() and (packet.header>>5)==MY_TEAM)
 
@@ -355,9 +355,9 @@ class PKT:
     # Check if data and expected position
     # Input:
     #       - Packet (self): payload field in a frame (total size <= 32B)
-    # Output: Yes (1) or No (0)
+    # Output: True or False.
     def is_expected_data(self):
-        return(packet.is_data() and (packet.header&(0b00011111))==RX_POS[TX]+1)
+        return(packet.is_data() and (packet.header&31)==RX_POS[TX]+1)
 
 
     # Check who is next in control packet
@@ -399,7 +399,7 @@ def received_acks():
 
 # Receive an ACK to Control frames
 # Input:  None
-# Output: True when control received (1) or False if not (0).
+# Output: True when control received or False if not.
 def received_ctrl():
     TCTRL = random.uniform(1,2)
     ctrl_rx = False
@@ -407,15 +407,15 @@ def received_ctrl():
     start_time = time.time()
     # While if still not TCTRL but something (wrong) received
     while(time.time()<start_time+TCTRL and not ctrl_rx):
-        while(not radio_Rx.available(0)):
-            # sleep(0.2)
-
         if(radio_Rx.available(0)):
             # Something received
             packet = PKT()
             packet.read_pkt()
             if(packet.is_CTRL()):
-                # Control Received
+                # Control Received. Updat ACK info of TX
+                if(TX_ACK[TX]):
+                    TX_POS[TX] += 1
+
                 ctrl_rx = True
 
     if(ctrl_rx):
@@ -445,6 +445,8 @@ def received_data():
                 if (packet.is_expected_data()):
                     # Position + 1 for TX
                     RX_POS[TX] += 1
+                    if(RX_POS[TX] == POS_MAX):
+                            RX_CMPLT += 1
 
             else:
                 # Discarded. Do nothing.
@@ -458,7 +460,7 @@ def received_data():
 
 # Check if MY_TEAM is next to transmit
 # Input: None
-# Output : True or False
+# Output : True or False.
 def i_am_next():
     return NEXT == MY_TEAM
 
