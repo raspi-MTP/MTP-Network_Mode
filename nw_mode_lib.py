@@ -181,7 +181,7 @@ def network_main():
                     t_send_ack = random.uniform(0,0.1)
                     time.sleep(t_send_ack)
                     # Send ACK
-                    send_ack()
+                    send_ack(packet)
                     WAITING_DATA = True
 
                 else:
@@ -376,6 +376,14 @@ class PKT:
         return self.header >> 5
 
 
+    # Generate char list to insert in frame using self header and payload
+    # Input:
+    #   - Packet (self): payload field in a frame (total size <= 32B)
+    # Output: OK (0) or ErrNum
+    def generate_frame_data:
+        self.frameData = list(chr(self.header)+self.payload)
+        return 0
+
 # Receive ACKs to Control frames (NOT DATA ACK)
 # Input:  None
 # Output: True when min ACKs received (1) or False if not (0).
@@ -500,6 +508,26 @@ def append_data(text_file, data):
     #f = open(text_file,"a")     # Open file to append something
     for j in data: f.write(j)   # Write in file
     #f.close()
+
+    return 0
+
+
+# Send ACK to received CTRL (same packet as received but changing ACK field)
+# Input:
+#       - Packet: payload field in a frame of received CTRL (total size <= 32B)
+# Output: OK (0) or ErrNum
+def send_ack(packet):
+    tx = packet.tx_ctrl()
+    if(tx == TEAM_A or tx == TEAM_B):
+        # ACK in 2nd position
+        packet.header = packet.header|2
+
+    else:
+        # ACK in 3rd position
+        packet.header = packet.header|1
+
+    packet.generate_frame_data()
+    packet.send_data()
 
     return 0
 
