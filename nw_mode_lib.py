@@ -126,8 +126,8 @@ def network_main():
     # Start timer
     start_time = time.time()
 
-    while(not radio_Rx.available(0) or time.time() < (start_time + TINIT)):
-        sleep(0.2)
+    while(not radio_Rx.available(0) and time.time() < (start_time + TINIT)):
+        # sleep(0.2)
 
     if(not radio_Rx.available(0)):
         SEND_CTRL = True
@@ -175,12 +175,13 @@ def network_main():
 
             else:
                 # Control frame to be received
-                if(received_ctrl()):
+                rx_ctrl, packet = received_ctrl()
+                if(rx_ctrl):
                     # Control received. TX and NEXT updated.
                     t_send_ack = random.uniform(0,0.1)
                     time.sleep(t_send_ack)
                     # Send ACK
-                    #############
+                    send_ack()
                     WAITING_DATA = True
 
                 else:
@@ -294,8 +295,11 @@ class PKT:
                             else:
                                 # Never here
 
-                            if(TX_ACK[TX] and TX_POS[TX]==POS_MAX)
-                                TX_CMPLT += 1
+                            if(TX_ACK[TX]):
+                                if(TX_POS[TX]==POS_MAX):
+                                    TX_CMPLT += 1
+                                else:
+                                    TX_POS[TX] += 1
 
             else:
                 # Data packet
@@ -409,25 +413,17 @@ def received_ctrl():
     ctrl_rx = False
 
     start_time = time.time()
+    packet = PKT()
     # While if still not TCTRL but something (wrong) received
     while(time.time()<start_time+TCTRL and not ctrl_rx):
         if(radio_Rx.available(0)):
             # Something received
-            packet = PKT()
             packet.read_pkt()
-            if(packet.is_CTRL()):
-                # Control Received. Updat ACK info of TX
-                if(TX_ACK[TX]):
-                    TX_POS[TX] += 1
-
+            if(packet.is_CTRL()):                    
+                # ACK info updated in read_pkt
                 ctrl_rx = True
 
-    if(ctrl_rx):
-        # Received control
-        return True
-    else:
-        # Timeout
-        return False
+    return ctrl_rx, packet
 
 
 # Wait and read data frames
