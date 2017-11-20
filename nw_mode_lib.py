@@ -7,7 +7,7 @@
 # Brian Lavery's lib_nrf24.py library is used for
 # Raspberry Pi and "Virtual GPIO" configuration
 
-# MTP Team C. Fall 2017-18. ETSETB, Universitat Politècnica de Catalunya (UPC).
+# MTP Team C. Fall 2017-18. ETSETB, Universitat Politecnica de Catalunya (UPC).
 
 
 
@@ -17,8 +17,8 @@ import sys
 import time
 import random
 from lib_nrf24 import NRF24
-import RPi.GPIO as GPIO
-import spidev
+#import RPi.GPIO as GPIO
+#import spidev
 from math import *
 import os.path
 
@@ -47,17 +47,18 @@ TEAM_D = 3
 MY_TEAM = TEAM_C
 TX = MY_TEAM                                # TX for current time slot
 NEXT = TEAM_D                               # TX for next time slot
-TX_POS = zeros(4)
-RX_POS = zeros(4)
-TX_ACK = zeros(4)
-RX_ACK = zeros(4)
+TX_POS = [0,0,0,0]
+RX_POS = [0,0,0,0]
+TX_ACK = [0,0,0,0]
+RX_ACK = [0,0,0,0]
 POS_MAX = 17
 
 
 
 #### Radio interfaces ####
-radio_Tx = NRF24(GPIO, spidev.SpiDev())
-radio_Rx = NRF24(GPIO, spidev.SpiDev())
+#radio_Tx = NRF24(GPIO, spidev.SpiDev())
+#radio_Rx = NRF24(GPIO, spidev.SpiDev())
+radio_Rx = radio_Tx = 0
 
 
 
@@ -67,47 +68,47 @@ radio_Rx = NRF24(GPIO, spidev.SpiDev())
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
 def init_comms():
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(GPIO_RX, GPIO.OUT)
-    GPIO.output(GPIO_RX,1)
-    GPIO.setup(GPIO_TX, GPIO.OUT)
-    GPIO.output(GPIO_TX,1)
+    # GPIO.setmode(GPIO.BCM)
+    # GPIO.setup(GPIO_RX, GPIO.OUT)
+    # GPIO.output(GPIO_RX,1)
+    # GPIO.setup(GPIO_TX, GPIO.OUT)
+    # GPIO.output(GPIO_TX,1)
 
-    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
-    radio_Tx.begin(0, GPIO_TX)
-    radio_Rx.begin(1, GPIO_RX)
+    # # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
+    # radio_Tx.begin(0, GPIO_TX)
+    # radio_Rx.begin(1, GPIO_RX)
 
-    # Payload Size set to defined value
-    radio_Tx.setPayloadSize(PLOAD_SIZE)
-    radio_Rx.setPayloadSize(PLOAD_SIZE)
+    # # Payload Size set to defined value
+    # radio_Tx.setPayloadSize(PLOAD_SIZE)
+    # radio_Rx.setPayloadSize(PLOAD_SIZE)
 
-    # We choose the channels to be used for one and the other transceiver
-    radio_Tx.setChannel(channel_TX)
-    radio_Rx.setChannel(channel_RX)
+    # # We choose the channels to be used for one and the other transceiver
+    # radio_Tx.setChannel(channel_TX)
+    # radio_Rx.setChannel(channel_RX)
 
-    # Transmission Rate
-    radio_Tx.setDataRate(BRATE)
-    radio_Rx.setDataRate(BRATE)
+    # # Transmission Rate
+    # radio_Tx.setDataRate(BRATE)
+    # radio_Rx.setDataRate(BRATE)
 
-    # Configuration of the power level to be used by the transceiver
-    radio_Tx.setPALevel(PWR_LVL)
-    radio_Rx.setPALevel(PWR_LVL)
+    # # Configuration of the power level to be used by the transceiver
+    # radio_Tx.setPALevel(PWR_LVL)
+    # radio_Rx.setPALevel(PWR_LVL)
 
-    # Disabled Auto Acknowledgement
-    radio_Tx.setAutoAck(False)
-    radio_Rx.setAutoAck(False)
+    # # Disabled Auto Acknowledgement
+    # radio_Tx.setAutoAck(False)
+    # radio_Rx.setAutoAck(False)
 
-    # Enable CRC 16b
-    radio_Tx.setCRCLength(NRF24.CRC_16)
-    radio_Tx.setCRCLength(NRF24.CRC_16)
+    # # Enable CRC 16b
+    # radio_Tx.setCRCLength(NRF24.CRC_16)
+    # radio_Tx.setCRCLength(NRF24.CRC_16)
 
-    # Dynamic payload size
-    radio_Tx.enableDynamicPayloads()
-    radio_Rx.enableDynamicPayloads()
+    # # Dynamic payload size
+    # radio_Tx.enableDynamicPayloads()
+    # radio_Rx.enableDynamicPayloads()
 
-    # Open the writing and reading pipe
-    radio_Tx.openWritingPipe(PIPE_TX)
-    radio_Rx.openReadingPipe(1, PIPE_RX)
+    # # Open the writing and reading pipe
+    # radio_Tx.openWritingPipe(PIPE_TX)
+    # radio_Rx.openReadingPipe(1, PIPE_RX)
 
     return 0
 
@@ -128,6 +129,7 @@ def network_main():
 
     while(not radio_Rx.available(0) and time.time() < (start_time + TINIT)):
         # sleep(0.2)
+        pass
 
     if(not radio_Rx.available(0)):
         SEND_CTRL = True
@@ -146,6 +148,7 @@ def network_main():
 
             else:
                 # Timeout (less than 2 ACKs), wait control.
+                pass
             
             SEND_CTRL = False
 
@@ -201,7 +204,7 @@ def network_main():
 #       - Payload Length: int with total length of payload (int in B)
 #       - Frame Data: header+payload (chr list)
 class PKT:
-    def __init__(typ=0,header=chr(0),payload=""):
+    def __init__(self, typ=0,header=0,payload=""):
         self.typ = typ
         self.header = header
         self.payload = payload
@@ -267,10 +270,12 @@ class PKT:
                     if(self.is_ACK()):
                         # ACK to MY_TEAM
                         # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
+                        pass
 
                     else:
                         if(SEND_CTRL):
                             # Discard, someone is trying to win our channel
+                            pass
                         else:
                             # We are in RX mode waiting for someone's control
                             TX = self.header >> 5
@@ -287,6 +292,7 @@ class PKT:
 
                             elif(TX == TEAM_C):
                                 # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
+                                pass
 
                             elif(TX == TEAM_D):
                                 # Team D --> ACK order: A, B, C --> header[7]
@@ -294,6 +300,7 @@ class PKT:
 
                             else:
                                 # Never here
+                                pass
 
                             if(TX_ACK[TX]):
                                 if(TX_POS[TX]==POS_MAX):
@@ -380,7 +387,7 @@ class PKT:
     # Input:
     #   - Packet (self): payload field in a frame (total size <= 32B)
     # Output: OK (0) or ErrNum
-    def generate_frame_data:
+    def generate_frame_data(self):
         self.frameData = list(chr(self.header)+self.payload)
         return 0
 
@@ -390,11 +397,8 @@ class PKT:
 def received_acks():
     acks = 0
     start_time = time.time()
-    while(acks < 3 or time.time()<start_time+TACK)
-        while(not radio_Rx.available(0) or time.time()<start_time+TACK):
-            # sleep(0.1)
-        
-        if(radio_Rx.available(0)):
+    while(acks < 3 or time.time()<start_time+TACK):
+        if(radio_Rx.available(0)):       
             packet = PKT()
             packet.read_pkt()
             if(packet.is_ACK()):
@@ -403,6 +407,7 @@ def received_acks():
 
             else:
                 # Discarded. Do nothing.
+                pass
 
     if(acks < 2):
         # Channel not won
@@ -442,6 +447,7 @@ def received_data():
     start_time = time.time()
     while(not data_ok or time.time()<start_time+TACK):
         while(not radio_Rx.available(0) or time.time()<start_time+TACK):
+            pass
             # sleep(0.1)
         
         if(radio_Rx.available(0)):
@@ -459,6 +465,7 @@ def received_data():
 
             else:
                 # Discarded. Do nothing.
+                pass
 
     if(data_ok):
         return True
@@ -479,8 +486,7 @@ def i_am_next():
 #       - Text file: object associated to reading file
 #       - Index: position to be read, i.e. packet number (int)
 # Output: Payload data string
-def generate_data(index = 0, text_file, pkt):
-
+def generate_data(text_file, index = 0):
     file_data = text_file.read()
     #text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y)             # Convert the text into binary, in 8-bit format 
     # len_text = len(text_in_bin)
@@ -503,7 +509,6 @@ def generate_data(index = 0, text_file, pkt):
 #       - Data: string to be added at the end of the file
 # Output: OK or ErrNum
 def append_data(text_file, data):
-
     if(len(data) < 1):          # Empty string
         return -1
 
@@ -523,8 +528,8 @@ def send_ack(packet):
         packet.header = packet.header|2
 
     else:
-        # ACK in 3rd position
-        packet.header = packet.header|1
+        # ACK in 3rd packet
+        positionx.header = packet.header|1
 
     packet.generate_frame_data()
     packet.send_data()
@@ -540,7 +545,7 @@ def send_data():
     packet = PKT()
     if TX_POS[0] < POS_MAX:
         f = open("text_file_A.txt","r")
-        payload = generate_data(TX_POS[0], f)
+        payload = generate_data(f, TX_POS[0])
         packet.generate_pkt(1, payload, 0)
         packet.send_pkt()
         f.close()
@@ -548,7 +553,7 @@ def send_data():
     # Sending to team B
     if TX_POS[1] < POS_MAX:
         f = open("text_file_B.txt","r")
-        payload = generate_data(TX_POS[1], f)
+        payload = generate_data(f, TX_POS[1])
         packet.generate_pkt(1, payload, 1)
         packet.send_pkt()
         f.close()
@@ -556,7 +561,7 @@ def send_data():
     # Sending to team D
     if TX_POS[3] < POS_MAX:
         f = open("text_file_D.txt","r")
-        payload = generate_data(TX_POS[2], f)
+        payload = generate_data(f, TX_POS[2])
         packet.generate_pkt(1, payload, 1)
         packet.send_pkt()
         f.close()
