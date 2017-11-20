@@ -481,18 +481,20 @@ def i_am_next():
 # Output: Payload data string
 def generate_data(index = 0, text_file, pkt):
 
-    # CHECK FILES FROM SINGLE MODE (deviceTX_2_0.py for example). I THINK IT IS MUCH EASIER :)
-    y = text_file.read()
-    text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y)             # Convert the text into binary, in 8-bit format 
+    file_data = text_file.read()
+    #text_in_bin =' '.join('{0:08b}'.format(ord(x), 'b') for x in y)             # Convert the text into binary, in 8-bit format 
     # len_text = len(text_in_bin)
 
-    payload = PLOAD_SIZE - 1
-    len_packet = payload * 8                                                    # Convert size to bits
+    #payload = PLOAD_SIZE - 1
+    #len_packet = payload * 8                                                    # Convert size to bits
     # num_packets_to_send = len_text/len_packet
 
-    data = text_in_bin[index * len_packet : index * len_packet + len_packet - 1] # a partition of length len_packet of the text_file is taken
-
-    return data
+    # data = text_in_bin[index * len_packet : index * len_packet + len_packet - 1] # a partition of length len_packet of the text_file is taken
+    size = PLOAD_SIZE-HDR_SIZE
+    if(index < POS_MAX):
+        return file_data[index*size:(index+1)*size]
+    else:
+        return file_data[index*size:]
 
 
 # Data added to the end of a given file.
@@ -505,9 +507,7 @@ def append_data(text_file, data):
     if(len(data) < 1):          # Empty string
         return -1
 
-    #f = open(text_file,"a")     # Open file to append something
     for j in data: f.write(j)   # Write in file
-    #f.close()
 
     return 0
 
