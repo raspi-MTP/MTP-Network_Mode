@@ -5,8 +5,7 @@ def main():
     packet = PKT()
     packet.generate_pkt(0)
 
-    print(bin(ord(packet.header)))
-    print(packet.frameData)
+    packet.send_pkt()
 
 
 

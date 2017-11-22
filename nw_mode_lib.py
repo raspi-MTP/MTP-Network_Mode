@@ -25,7 +25,7 @@ import os.path
 
 
 #### Network parameters ####
-RF_CH = [0x50, 0x64]                        # UL & DL channels
+RF_CH = [0x64, 0x64]                        # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
 PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
@@ -35,7 +35,7 @@ TMAX = 120                                  # Max time for network mode (in seco
 PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
 HDR_SIZE = 1                                # Header size inside payload frame
 PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
-PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
+PIPE_RX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
 WAITING_DATA = False                        # Flag to know whether data frame is expected or control, otherwise
@@ -117,7 +117,7 @@ def init_comms():
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
 def network_main():
-    random.seed(54321)
+    random.seed(int(time.time()))
     TINIT = random.uniform(5,10)
 
     # Start timer

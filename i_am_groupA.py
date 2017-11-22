@@ -25,7 +25,7 @@ import os.path
 
 
 #### Network parameters ####
-RF_CH = [0x50, 0x64]                        # UL & DL channels
+RF_CH = [0x64, 0x64]                        # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
 PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
@@ -35,7 +35,7 @@ TMAX = 120                                  # Max time for network mode (in seco
 PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
 HDR_SIZE = 1                                # Header size inside payload frame
 PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
-PIPE_RX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # RX pipe address
+PIPE_RX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
 WAITING_DATA = False                        # Flag to know whether data frame is expected or control, otherwise
@@ -56,9 +56,9 @@ POS_MAX = 17
 
 
 #### Radio interfaces ####
-#radio_Tx = NRF24(GPIO, spidev.SpiDev())
-#radio_Rx = NRF24(GPIO, spidev.SpiDev())
-radio_Rx = radio_Tx = 0
+radio_Tx = NRF24(GPIO, spidev.SpiDev())
+radio_Rx = NRF24(GPIO, spidev.SpiDev())
+# radio_Rx = radio_Tx = 0
 
 
 
@@ -68,47 +68,47 @@ radio_Rx = radio_Tx = 0
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
 def init_comms():
-    # GPIO.setmode(GPIO.BCM)
-    # GPIO.setup(GPIO_RX, GPIO.OUT)
-    # GPIO.output(GPIO_RX,1)
-    # GPIO.setup(GPIO_TX, GPIO.OUT)
-    # GPIO.output(GPIO_TX,1)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(GPIO_RX, GPIO.OUT)
+    GPIO.output(GPIO_RX,1)
+    GPIO.setup(GPIO_TX, GPIO.OUT)
+    GPIO.output(GPIO_TX,1)
 
-    # # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
-    # radio_Tx.begin(0, GPIO_TX)
-    # radio_Rx.begin(1, GPIO_RX)
+    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
+    radio_Tx.begin(0, GPIO_TX)
+    radio_Rx.begin(1, GPIO_RX)
 
-    # # Payload Size set to defined value
-    # radio_Tx.setPayloadSize(PLOAD_SIZE)
-    # radio_Rx.setPayloadSize(PLOAD_SIZE)
+    # Payload Size set to defined value
+    radio_Tx.setPayloadSize(PLOAD_SIZE)
+    radio_Rx.setPayloadSize(PLOAD_SIZE)
 
-    # # We choose the channels to be used for one and the other transceiver
-    # radio_Tx.setChannel(channel_TX)
-    # radio_Rx.setChannel(channel_RX)
+    # We choose the channels to be used for one and the other transceiver
+    radio_Tx.setChannel(channel_TX)
+    radio_Rx.setChannel(channel_RX)
 
-    # # Transmission Rate
-    # radio_Tx.setDataRate(BRATE)
-    # radio_Rx.setDataRate(BRATE)
+    # Transmission Rate
+    radio_Tx.setDataRate(BRATE)
+    radio_Rx.setDataRate(BRATE)
 
-    # # Configuration of the power level to be used by the transceiver
-    # radio_Tx.setPALevel(PWR_LVL)
-    # radio_Rx.setPALevel(PWR_LVL)
+    # Configuration of the power level to be used by the transceiver
+    radio_Tx.setPALevel(PWR_LVL)
+    radio_Rx.setPALevel(PWR_LVL)
 
-    # # Disabled Auto Acknowledgement
-    # radio_Tx.setAutoAck(False)
-    # radio_Rx.setAutoAck(False)
+    # Disabled Auto Acknowledgement
+    radio_Tx.setAutoAck(False)
+    radio_Rx.setAutoAck(False)
 
-    # # Enable CRC 16b
-    # radio_Tx.setCRCLength(NRF24.CRC_16)
-    # radio_Tx.setCRCLength(NRF24.CRC_16)
+    # Enable CRC 16b
+    radio_Tx.setCRCLength(NRF24.CRC_16)
+    radio_Tx.setCRCLength(NRF24.CRC_16)
 
-    # # Dynamic payload size
-    # radio_Tx.enableDynamicPayloads()
-    # radio_Rx.enableDynamicPayloads()
+    # Dynamic payload size
+    radio_Tx.enableDynamicPayloads()
+    radio_Rx.enableDynamicPayloads()
 
-    # # Open the writing and reading pipe
-    # radio_Tx.openWritingPipe(PIPE_TX)
-    # radio_Rx.openReadingPipe(1, PIPE_RX)
+    # Open the writing and reading pipe
+    radio_Tx.openWritingPipe(PIPE_TX)
+    radio_Rx.openReadingPipe(1, PIPE_RX)
 
     return 0
 
@@ -119,10 +119,6 @@ def init_comms():
 def network_main():
     random.seed(54321)
     TINIT = random.uniform(5,10)
-
-    # Disable CRC for Control packets
-    # radio_Tx.disableCRC()
-    # radio_Rx.disableCRC()
 
     # Start timer
     start_time = time.time()
@@ -146,9 +142,9 @@ def network_main():
                 # 2 or 3 ACKs received.
                 send_data()
 
-            else:
-                # Timeout (less than 2 ACKs), wait control.
-                pass
+            # else:
+            #     # Timeout (less than 2 ACKs), wait control.
+            #     pass
             
             SEND_CTRL = False
 
@@ -408,9 +404,9 @@ def received_acks():
                 # ACK to current Tx
                 acks += 1
 
-            else:
-                # Discarded. Do nothing.
-                pass
+            # else:
+            #     # Discarded. Do nothing.
+            #     pass
 
     if(acks < 2):
         # Channel not won
@@ -466,15 +462,11 @@ def received_data():
                     if(RX_POS[TX] == POS_MAX):
                             RX_CMPLT += 1
 
-            else:
-                # Discarded. Do nothing.
-                pass
+            # else:
+            #     # Discarded. Do nothing.
+            #     pass
 
-    if(data_ok):
-        return True
-
-    else:
-        return False
+    return data_ok
 
 
 # Check if MY_TEAM is next to transmit
