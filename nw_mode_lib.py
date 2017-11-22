@@ -120,10 +120,6 @@ def network_main():
     random.seed(54321)
     TINIT = random.uniform(5,10)
 
-    # Disable CRC for Control packets
-    # radio_Tx.disableCRC()
-    # radio_Rx.disableCRC()
-
     # Start timer
     start_time = time.time()
 
@@ -273,10 +269,11 @@ class PKT:
                         pass
 
                     else:
-                        if(SEND_CTRL):
-                            # Discard, someone is trying to win our channel
-                            pass
-                        else:
+                        # if(SEND_CTRL):
+                        #     # Discard, someone is trying to win our channel
+                        #     pass
+                        # else:
+                        if(not SEND_CTRL):
                             # We are in RX mode waiting for someone's control
                             TX = self.header >> 5
                             NEXT = (self.header >> 3) ^ (TX << 2)
@@ -405,9 +402,9 @@ def received_acks():
                 # ACK to current Tx
                 acks += 1
 
-            else:
-                # Discarded. Do nothing.
-                pass
+            # else:
+            #     # Discarded. Do nothing.
+            #     pass
 
     if(acks < 2):
         # Channel not won
@@ -463,15 +460,11 @@ def received_data():
                     if(RX_POS[TX] == POS_MAX):
                             RX_CMPLT += 1
 
-            else:
-                # Discarded. Do nothing.
-                pass
+            # else:
+            #     # Discarded. Do nothing.
+            #     pass
 
-    if(data_ok):
-        return True
-
-    else:
-        return False
+    return data_ok
 
 
 # Check if MY_TEAM is next to transmit
@@ -529,7 +522,7 @@ def send_ack(packet):
 
     else:
         # ACK in 3rd packet
-        positionx.header = packet.header|1
+        packet.header = packet.header|1
 
     packet.generate_frame_data()
     packet.send_data()
@@ -561,8 +554,8 @@ def send_data():
     # Sending to team D
     if TX_POS[3] < POS_MAX:
         f = open("text_file_D.txt","r")
-        payload = generate_data(f, TX_POS[2])
-        packet.generate_pkt(1, payload, 1)
+        payload = generate_data(f, TX_POS[3])
+        packet.generate_pkt(1, payload, 3)
         packet.send_pkt()
         f.close()
 

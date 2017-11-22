@@ -169,7 +169,7 @@ def network_main():
                 WAITING_DATA = False
                 if(i_am_next()):
                     TX = MY_TEAM
-                    NEXT = TEAM_D
+                    NEXT = TEAM_B
                     SEND_CTRL = True
 
                 else:
@@ -190,7 +190,7 @@ def network_main():
                 else:
                     # Timeout
                     TX = MY_TEAM
-                    NEXT = TEAM_D
+                    NEXT = TEAM_B
                     SEND_CTRL = True
 
 
@@ -282,25 +282,27 @@ class PKT:
                             NEXT = (self.header >> 3) ^ (TX << 2)
                             self.payload = ""
                             self.payloadLength = 0
-                            if(TX == TEAM_A):
-                                # Team A --> ACK order: B, C, D --> header[6]
-                                pass
+                            # if(TX == TEAM_A):
+                            #     # Team A --> ACK order: B, C, D --> header[6]
+                            #     pass
 
-                            elif(TX == TEAM_B):
-                                # Team B --> ACK order: A, C, D --> header[6]
-                                TX_ACK[0] = (self.header&2)/2
+                            # elif(TX == TEAM_B):
+                            #     # Team B --> ACK order: A, C, D --> header[6]
+                            #     TX_ACK[1] = (self.header&4)/4
 
-                            elif(TX == TEAM_C):
-                                # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
-                                TX_ACK[1] = (self.header&2)/2
+                            # elif(TX == TEAM_C):
+                            #     # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
+                            #     TX_ACK[2] = (self.header&4)/4
 
-                            elif(TX == TEAM_D):
-                                # Team D --> ACK order: A, B, C --> header[7]
-                                TX_ACK[2] = self.header&1
+                            # elif(TX == TEAM_D):
+                            #     # Team D --> ACK order: A, B, C --> header[7]
+                            #     TX_ACK[3] = (self.header&4)/4
 
-                            else:
-                                # Never here
-                                pass
+                            # else:
+                            #     # Never here
+                            #     pass
+
+                            TX_ACK[TX] = (self.header&4)/4
 
                             if(TX_ACK[TX]):
                                 if(TX_POS[TX]==POS_MAX):
@@ -523,13 +525,14 @@ def append_data(text_file, data):
 # Output: OK (0) or ErrNum
 def send_ack(packet):
     tx = packet.tx_ctrl()
-    if(tx == TEAM_A or tx == TEAM_B):
-        # ACK in 2nd position
-        packet.header = packet.header|2
+    # if(tx == TEAM_A or tx == TEAM_B):
+    #     # ACK in 2nd position
+    #     packet.header = packet.header|2
 
-    else:
-        # ACK in 3rd packet
-        positionx.header = packet.header|1
+    # else:
+    #     # ACK in 3rd packet
+    #     packet.header = packet.header|1
+    packet.header = packet.header|4
 
     packet.generate_frame_data()
     packet.send_data()
@@ -541,16 +544,8 @@ def send_ack(packet):
 # Input: None
 # Output: OK (0) or ErrNum
 def send_data():
-    # Sending to team A
-    packet = PKT()
-    if TX_POS[0] < POS_MAX:
-        f = open("text_file_A.txt","r")
-        payload = generate_data(f, TX_POS[0])
-        packet.generate_pkt(1, payload, 0)
-        packet.send_pkt()
-        f.close()
-
     # Sending to team B
+    packet = PKT()
     if TX_POS[1] < POS_MAX:
         f = open("text_file_B.txt","r")
         payload = generate_data(f, TX_POS[1])
@@ -558,11 +553,19 @@ def send_data():
         packet.send_pkt()
         f.close()
 
+    # Sending to team C
+    if TX_POS[2] < POS_MAX:
+        f = open("text_file_C.txt","r")
+        payload = generate_data(f, TX_POS[2])
+        packet.generate_pkt(1, payload, 2)
+        packet.send_pkt()
+        f.close()
+
     # Sending to team D
     if TX_POS[3] < POS_MAX:
         f = open("text_file_D.txt","r")
-        payload = generate_data(f, TX_POS[2])
-        packet.generate_pkt(1, payload, 1)
+        payload = generate_data(f, TX_POS[3])
+        packet.generate_pkt(1, payload, 3)
         packet.send_pkt()
         f.close()
 
@@ -575,16 +578,16 @@ def send_data():
 # Output: OK (0) or ErrNum
 def store_data(tx, payload):
     # File from team A
-    if tx == TEAM_A:
-        file_str = "rx_text_file_A.txt"
+    if tx == TEAM_B:
+        file_str = "rx_text_file_B.txt"
 
     # File from team B
-    elif tx == TEAM_B:
-        file_str = "rx_text_file_A.txt"
+    elif tx == TEAM_C:
+        file_str = "rx_text_file_C.txt"
 
     # File from team D
     elif tx == TEAM_D:
-        file_str = "rx_text_file_A.txt"
+        file_str = "rx_text_file_D.txt"
 
     else:
         return -1
