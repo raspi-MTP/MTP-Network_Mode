@@ -1,4 +1,4 @@
-import nw_mode_lib
+from nw_mode_lib import *
 
 
 def main():

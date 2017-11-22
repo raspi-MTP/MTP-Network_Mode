@@ -25,7 +25,7 @@ import os.path
 
 
 #### Network parameters ####
-RF_CH = [0x64, 0x64]                        # UL & DL channels
+RF_CH = 0x64                                # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
 PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
@@ -83,8 +83,8 @@ def init_comms():
     radio_Rx.setPayloadSize(PLOAD_SIZE)
 
     # We choose the channels to be used for one and the other transceiver
-    radio_Tx.setChannel(channel_TX)
-    radio_Rx.setChannel(channel_RX)
+    radio_Tx.setChannel(RF_CH)
+    radio_Rx.setChannel(RF_CH)
 
     # Transmission Rate
     radio_Tx.setDataRate(BRATE)
