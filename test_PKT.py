@@ -35,7 +35,7 @@ try:
         main()
 
 except KeyboardInterrupt:
-    radio_Rx.closeReadingPipe(1, PIPE_RX)
+    radio_Rx.closeReadingPipe(1)
     radio_Rx.end()
     radio_Tx.end()
 
