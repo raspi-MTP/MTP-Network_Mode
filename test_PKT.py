@@ -7,8 +7,8 @@ def main():
     packet = PKT()
     packet.generate_pkt(0)
 
-    start_time = time.time()
     while(True):
+        start_time = time.time()
         while(not radio_Rx.available(0) and time.time() < start_time + 5):
             packet.send_pkt()
             #print("Nothing received :(")
