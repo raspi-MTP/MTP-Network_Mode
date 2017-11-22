@@ -518,11 +518,11 @@ def send_ack(packet):
     tx = packet.tx_ctrl()
     if(tx == TEAM_A or tx == TEAM_B):
         # ACK in 2nd position
-        packet.header = packet.header|2
+        packet.header = ((packet.header|2)&251)&254
 
     else:
         # ACK in 3rd packet
-        packet.header = packet.header|1
+        packet.header = (packet.header|1)&251)&253
 
     packet.generate_frame_data()
     packet.send_data()
