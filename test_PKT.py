@@ -16,6 +16,7 @@ def main():
 
         if radio_Rx.available(0):
             packet.read_pkt()
+            print("Received ACK: "+packet.header)
         else:
             print("TIMEOUT")
 
