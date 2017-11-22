@@ -9,10 +9,9 @@ def main():
 
     start_time = time.time()
     while(True):
-        packet.send_pkt()
         while(not radio_Rx.available(0) and time.time() < start_time + 5):
+            packet.send_pkt()
             #print("Nothing received :(")
-            pass
 
         if radio_Rx.available(0):
             packet.read_pkt()
