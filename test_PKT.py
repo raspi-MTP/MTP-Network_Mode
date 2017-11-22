@@ -1,4 +1,4 @@
-from nw_mode_lib import PKT
+from nw_mode_lib
 
 
 def main():
