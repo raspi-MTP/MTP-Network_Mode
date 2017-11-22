@@ -14,7 +14,10 @@ def main():
     while(not radio_Rx.available(0) and time.time() < start_time + 10):
         print("Nothing received :(")
 
-    print(packet.header)
+    if radio_Rx.available(0):
+        print(packet.header)
+    else:
+        print("TIMEOUT!")
 
 
 
