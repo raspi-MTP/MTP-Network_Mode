@@ -442,7 +442,7 @@ def received_ctrl():
 def received_data():
     acks = 0
     start_time = time.time()
-    while(not data_ok or time.time()<start_time+TACK):
+    while(time.time()<start_time+TDATA):
         # while(not radio_Rx.available(0) or time.time()<start_time+TACK):
         #     pass
             # sleep(0.1)
