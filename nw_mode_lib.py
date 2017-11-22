@@ -324,7 +324,7 @@ class PKT:
     #       - Packet (self): payload field in frame to be sent (total size <= 32B)
     # Output: OK (0) or ErrNum (-1)
     def send_pkt(self):
-        if packet.payloadLength > PLOAD_SIZE-HDR_SIZE:
+        if self.payloadLength > PLOAD_SIZE-HDR_SIZE:
             return -1
 
         else:
