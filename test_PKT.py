@@ -8,8 +8,18 @@ def main():
     packet.generate_pkt(0)
 
     start_time = time.time()
-    while(time.time() < start_time + 10):
+    while(True):
         packet.send_pkt()
+        while(not radio_Rx.available(0) and time.time() < start_time + 5):
+            #print("Nothing received :(")
+            pass
+
+        if radio_Rx.available(0):
+            packet.read_pkt()
+        else:
+            print("TIMEOUT")
+
+
 
     # Wait for ACK
     # while(not radio_Rx.available(0) and time.time() < start_time + 10):
