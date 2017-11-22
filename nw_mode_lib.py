@@ -522,7 +522,7 @@ def send_ack(packet):
 
     else:
         # ACK in 3rd packet
-        packet.header = (packet.header|1)&251)&253
+        packet.header = ((packet.header|1)&251)&253
 
     packet.generate_frame_data()
     packet.send_data()
