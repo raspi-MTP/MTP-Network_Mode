@@ -17,8 +17,8 @@ import sys
 import time
 import random
 from lib_nrf24 import NRF24
-#import RPi.GPIO as GPIO
-#import spidev
+import RPi.GPIO as GPIO
+import spidev
 from math import *
 import os.path
 
@@ -56,9 +56,9 @@ POS_MAX = 17
 
 
 #### Radio interfaces ####
-#radio_Tx = NRF24(GPIO, spidev.SpiDev())
-#radio_Rx = NRF24(GPIO, spidev.SpiDev())
-radio_Rx = radio_Tx = 0
+radio_Tx = NRF24(GPIO, spidev.SpiDev())
+radio_Rx = NRF24(GPIO, spidev.SpiDev())
+#radio_Rx = radio_Tx = 0
 
 
 
@@ -68,47 +68,47 @@ radio_Rx = radio_Tx = 0
 # Input:  None
 # Output: OK (0) or ErrNum (-1)
 def init_comms():
-    # GPIO.setmode(GPIO.BCM)
-    # GPIO.setup(GPIO_RX, GPIO.OUT)
-    # GPIO.output(GPIO_RX,1)
-    # GPIO.setup(GPIO_TX, GPIO.OUT)
-    # GPIO.output(GPIO_TX,1)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(GPIO_RX, GPIO.OUT)
+    GPIO.output(GPIO_RX,1)
+    GPIO.setup(GPIO_TX, GPIO.OUT)
+    GPIO.output(GPIO_TX,1)
 
-    # # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
-    # radio_Tx.begin(0, GPIO_TX)
-    # radio_Rx.begin(1, GPIO_RX)
+    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
+    radio_Tx.begin(0, GPIO_TX)
+    radio_Rx.begin(1, GPIO_RX)
 
-    # # Payload Size set to defined value
-    # radio_Tx.setPayloadSize(PLOAD_SIZE)
-    # radio_Rx.setPayloadSize(PLOAD_SIZE)
+    # Payload Size set to defined value
+    radio_Tx.setPayloadSize(PLOAD_SIZE)
+    radio_Rx.setPayloadSize(PLOAD_SIZE)
 
-    # # We choose the channels to be used for one and the other transceiver
-    # radio_Tx.setChannel(channel_TX)
-    # radio_Rx.setChannel(channel_RX)
+    # We choose the channels to be used for one and the other transceiver
+    radio_Tx.setChannel(channel_TX)
+    radio_Rx.setChannel(channel_RX)
 
-    # # Transmission Rate
-    # radio_Tx.setDataRate(BRATE)
-    # radio_Rx.setDataRate(BRATE)
+    # Transmission Rate
+    radio_Tx.setDataRate(BRATE)
+    radio_Rx.setDataRate(BRATE)
 
-    # # Configuration of the power level to be used by the transceiver
-    # radio_Tx.setPALevel(PWR_LVL)
-    # radio_Rx.setPALevel(PWR_LVL)
+    # Configuration of the power level to be used by the transceiver
+    radio_Tx.setPALevel(PWR_LVL)
+    radio_Rx.setPALevel(PWR_LVL)
 
-    # # Disabled Auto Acknowledgement
-    # radio_Tx.setAutoAck(False)
-    # radio_Rx.setAutoAck(False)
+    # Disabled Auto Acknowledgement
+    radio_Tx.setAutoAck(False)
+    radio_Rx.setAutoAck(False)
 
-    # # Enable CRC 16b
-    # radio_Tx.setCRCLength(NRF24.CRC_16)
-    # radio_Tx.setCRCLength(NRF24.CRC_16)
+    # Enable CRC 16b
+    radio_Tx.setCRCLength(NRF24.CRC_16)
+    radio_Tx.setCRCLength(NRF24.CRC_16)
 
-    # # Dynamic payload size
-    # radio_Tx.enableDynamicPayloads()
-    # radio_Rx.enableDynamicPayloads()
+    # Dynamic payload size
+    radio_Tx.enableDynamicPayloads()
+    radio_Rx.enableDynamicPayloads()
 
-    # # Open the writing and reading pipe
-    # radio_Tx.openWritingPipe(PIPE_TX)
-    # radio_Rx.openReadingPipe(1, PIPE_RX)
+    # Open the writing and reading pipe
+    radio_Tx.openWritingPipe(PIPE_TX)
+    radio_Rx.openReadingPipe(1, PIPE_RX)
 
     return 0
 
@@ -142,9 +142,9 @@ def network_main():
                 # 2 or 3 ACKs received.
                 send_data()
 
-            else:
-                # Timeout (less than 2 ACKs), wait control.
-                pass
+            # else:
+            #     # Timeout (less than 2 ACKs), wait control.
+            #     pass
             
             SEND_CTRL = False
 
@@ -263,47 +263,47 @@ class PKT:
                     return -2
                 else:
                     self.typ = 0
-                    if(self.is_ACK()):
-                        # ACK to MY_TEAM
-                        # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
-                        pass
+                    # if(self.is_ACK()):
+                    #     # ACK to MY_TEAM
+                    #     # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
+                    #     pass
 
-                    else:
-                        # if(SEND_CTRL):
-                        #     # Discard, someone is trying to win our channel
-                        #     pass
-                        # else:
-                        if(not SEND_CTRL):
-                            # We are in RX mode waiting for someone's control
-                            TX = self.header >> 5
-                            NEXT = (self.header >> 3) ^ (TX << 2)
-                            self.payload = ""
-                            self.payloadLength = 0
-                            if(TX == TEAM_A):
-                                # Team A --> ACK order: B, C, D --> header[6]
-                                TX_ACK[0] = (self.header&2)/2
+                    # else:
+                    #     if(SEND_CTRL):
+                    #         # Discard, someone is trying to win our channel
+                    #         pass
+                    #     else:
+                    if(not (self.is_ACK() or SEND_CTRL)):
+                        # We are in RX mode waiting for someone's control
+                        TX = self.header >> 5
+                        NEXT = (self.header >> 3) ^ (TX << 2)
+                        self.payload = ""
+                        self.payloadLength = 0
+                        if(TX == TEAM_A):
+                            # Team A --> ACK order: B, C, D --> header[6]
+                            TX_ACK[0] = (self.header&2)/2
 
-                            elif(TX == TEAM_B):
-                                # Team B --> ACK order: A, C, D --> header[6]
-                                TX_ACK[1] = (self.header&2)/2
+                        elif(TX == TEAM_B):
+                            # Team B --> ACK order: A, C, D --> header[6]
+                            TX_ACK[1] = (self.header&2)/2
 
-                            elif(TX == TEAM_C):
-                                # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
-                                pass
+                        elif(TX == TEAM_C):
+                            # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
+                            pass
 
-                            elif(TX == TEAM_D):
-                                # Team D --> ACK order: A, B, C --> header[7]
-                                TX_ACK[2] = self.header&1
+                        elif(TX == TEAM_D):
+                            # Team D --> ACK order: A, B, C --> header[7]
+                            TX_ACK[2] = self.header&1
 
+                        else:
+                            # Never here
+                            pass
+
+                        if(TX_ACK[TX]):
+                            if(TX_POS[TX]==POS_MAX):
+                                TX_CMPLT += 1
                             else:
-                                # Never here
-                                pass
-
-                            if(TX_ACK[TX]):
-                                if(TX_POS[TX]==POS_MAX):
-                                    TX_CMPLT += 1
-                                else:
-                                    TX_POS[TX] += 1
+                                TX_POS[TX] += 1
 
             else:
                 # Data packet
@@ -443,8 +443,8 @@ def received_data():
     acks = 0
     start_time = time.time()
     while(not data_ok or time.time()<start_time+TACK):
-        while(not radio_Rx.available(0) or time.time()<start_time+TACK):
-            pass
+        # while(not radio_Rx.available(0) or time.time()<start_time+TACK):
+        #     pass
             # sleep(0.1)
         
         if(radio_Rx.available(0)):

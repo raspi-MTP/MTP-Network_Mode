@@ -267,48 +267,49 @@ class PKT:
                     return -2
                 else:
                     self.typ = 0
-                    if(self.is_ACK()):
-                        # ACK to MY_TEAM
-                        # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
-                        pass
+                    # if(self.is_ACK()):
+                    #     # ACK to MY_TEAM
+                    #     # Doing nothing here, TX and NEXT modified outside (min ACKs is 2)
+                    #     pass
 
-                    else:
-                        if(SEND_CTRL):
-                            # Discard, someone is trying to win our channel
-                            pass
-                        else:
-                            # We are in RX mode waiting for someone's control
-                            TX = self.header >> 5
-                            NEXT = (self.header >> 3) ^ (TX << 2)
-                            self.payload = ""
-                            self.payloadLength = 0
-                            # if(TX == TEAM_A):
-                            #     # Team A --> ACK order: B, C, D --> header[6]
-                            #     pass
+                    # else:
+                    #     if(SEND_CTRL):
+                    #         # Discard, someone is trying to win our channel
+                    #         pass
+                    #     else:
+                    if(not (self.is_ACK() or SEND_CTRL)):
+                        # We are in RX mode waiting for someone's control
+                        TX = self.header >> 5
+                        NEXT = (self.header >> 3) ^ (TX << 2)
+                        self.payload = ""
+                        self.payloadLength = 0
+                        # if(TX == TEAM_A):
+                        #     # Team A --> ACK order: B, C, D --> header[6]
+                        #     pass
 
-                            # elif(TX == TEAM_B):
-                            #     # Team B --> ACK order: A, C, D --> header[6]
-                            #     TX_ACK[1] = (self.header&4)/4
+                        # elif(TX == TEAM_B):
+                        #     # Team B --> ACK order: A, C, D --> header[6]
+                        #     TX_ACK[1] = (self.header&4)/4
 
-                            # elif(TX == TEAM_C):
-                            #     # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
-                            #     TX_ACK[2] = (self.header&4)/4
+                        # elif(TX == TEAM_C):
+                        #     # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
+                        #     TX_ACK[2] = (self.header&4)/4
 
-                            # elif(TX == TEAM_D):
-                            #     # Team D --> ACK order: A, B, C --> header[7]
-                            #     TX_ACK[3] = (self.header&4)/4
+                        # elif(TX == TEAM_D):
+                        #     # Team D --> ACK order: A, B, C --> header[7]
+                        #     TX_ACK[3] = (self.header&4)/4
 
-                            # else:
-                            #     # Never here
-                            #     pass
+                        # else:
+                        #     # Never here
+                        #     pass
 
-                            TX_ACK[TX] = (self.header&4)/4
+                        TX_ACK[TX] = (self.header&4)/4
 
-                            if(TX_ACK[TX]):
-                                if(TX_POS[TX]==POS_MAX):
-                                    TX_CMPLT += 1
-                                else:
-                                    TX_POS[TX] += 1
+                        if(TX_ACK[TX]):
+                            if(TX_POS[TX]==POS_MAX):
+                                TX_CMPLT += 1
+                            else:
+                                TX_POS[TX] += 1
 
             else:
                 # Data packet
@@ -448,8 +449,8 @@ def received_data():
     acks = 0
     start_time = time.time()
     while(not data_ok or time.time()<start_time+TACK):
-        while(not radio_Rx.available(0) or time.time()<start_time+TACK):
-            pass
+        # while(not radio_Rx.available(0) or time.time()<start_time+TACK):
+        #     pass
             # sleep(0.1)
         
         if(radio_Rx.available(0)):
