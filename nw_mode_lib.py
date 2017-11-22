@@ -27,7 +27,7 @@ import os.path
 #### Network parameters ####
 RF_CH = 0x64                                # UL & DL channels
 TX_CMPLT = RX_CMPLT = 0                     # Completed files
-PWR_LVL = NRF24.PA_HIGH                     # Transceiver output (HIGH = -6 dBm + 20 dB)
+PWR_LVL = NRF24.PA_MIN                      # Transceiver output (HIGH = -6 dBm + 20 dB)
 BRATE = NRF24.BR_250KBPS                    # 250 kbps bit rate
 TDATA = TACK =  0.2                         # Data and ACK frames timeout (in seconds)
 TCTRL = TINIT = 0                           # Control frame and initialization random timeouts (in seconds)
