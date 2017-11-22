@@ -570,11 +570,11 @@ def send_data():
 #       - Payload: data to add to file (str)
 # Output: OK (0) or ErrNum
 def store_data(tx, payload):
-    # File from team A
+    # File from team B
     if tx == TEAM_B:
         file_str = "rx_text_file_B.txt"
 
-    # File from team B
+    # File from team C
     elif tx == TEAM_C:
         file_str = "rx_text_file_C.txt"
 

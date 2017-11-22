@@ -573,11 +573,11 @@ def store_data(tx, payload):
 
     # File from team B
     elif tx == TEAM_B:
-        file_str = "rx_text_file_A.txt"
+        file_str = "rx_text_file_B.txt"
 
     # File from team D
     elif tx == TEAM_D:
-        file_str = "rx_text_file_A.txt"
+        file_str = "rx_text_file_D.txt"
 
     else:
         return -1
