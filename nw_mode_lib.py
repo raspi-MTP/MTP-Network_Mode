@@ -70,9 +70,9 @@ radio_Rx = NRF24(GPIO, spidev.SpiDev())
 def init_comms():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(GPIO_RX, GPIO.OUT)
-    GPIO.output(GPIO_RX,1)
+    GPIO.output(GPIO_RX,GPIO.LOW)
     GPIO.setup(GPIO_TX, GPIO.OUT)
-    GPIO.output(GPIO_TX,1)
+    GPIO.output(GPIO_TX,GPIO.LOW)
 
     # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (23)
     radio_Tx.begin(0, GPIO_TX)
