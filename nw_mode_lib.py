@@ -34,7 +34,7 @@ TCTRL = TINIT = 0                           # Control frame and initialization r
 TMAX = 120                                  # Max time for network mode (in seconds)
 PLOAD_SIZE = 32                             # Payload size corresponding to data in one frame (32 B max)
 HDR_SIZE = 1                                # Header size inside payload frame
-PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
+PIPE_TX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]    # TX pipe address
 PIPE_RX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
 GPIO_RX = 23                                # RX transceiver's CE to Raspberry GPIO
