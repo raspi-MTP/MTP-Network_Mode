@@ -16,7 +16,7 @@
 import sys
 import time
 import random
-from lib_nrf24 import NRF24
+from lib_nrf24 import *
 import RPi.GPIO as GPIO
 import spidev
 from math import *
@@ -177,7 +177,7 @@ def network_main():
                 rx_ctrl, packet = received_ctrl()
                 if(rx_ctrl):
                     # Control received. TX and NEXT updated.
-                    t_send_ack = random.uniform(0,0.1)
+                    t_send_ack = random.uniform(0,0.01)
                     time.sleep(t_send_ack)
                     # Send ACK
                     send_ack(packet)
@@ -422,8 +422,9 @@ def received_ctrl():
     TCTRL = random.uniform(1,2)
     ctrl_rx = False
 
-    start_time = time.time()
     packet = PKT()
+    start_time = time.time()
+    print("Control timer started: %0.3f s" & TCTRL)
     # While if still not TCTRL but something (wrong) received
     while(time.time()<start_time+TCTRL and not ctrl_rx):
         if(radio_Rx.available(0)):
@@ -505,7 +506,7 @@ def append_data(text_file, data):
     if(len(data) < 1):          # Empty string
         return -1
 
-    for j in data: f.write(j)   # Write in file
+    for j in data: text_file.write(j)   # Write in file
 
     return 0
 
