@@ -8,7 +8,7 @@ try:
         packet = PKT()
         packet.generate_pkt(0)
 
-        time.sleep(2)
+        #time.sleep(2)
         while(True):
             start_time = time.time()
             packet.send_pkt()
@@ -18,8 +18,8 @@ try:
 
 
             if radio_Rx.available(0):
-                packet.read_pkt()
                 print("Received ACK: "+packet.header)
+                #packet.read_pkt()
             else:
                 print("TIMEOUT")
 
