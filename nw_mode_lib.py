@@ -16,7 +16,7 @@
 import sys
 import time
 import random
-from lib_nrf24 import *
+from lib_nrf24 import NRF24
 import RPi.GPIO as GPIO
 import spidev
 from math import *
