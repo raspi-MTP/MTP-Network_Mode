@@ -14,6 +14,8 @@ try:
             packet.send_pkt()
             while(not radio_Rx.available(0) and time.time() < start_time + 2):
                 #print("Nothing received :(")
+                sleep(0.1)
+
 
             if radio_Rx.available(0):
                 packet.read_pkt()
