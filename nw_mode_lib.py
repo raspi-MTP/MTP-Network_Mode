@@ -440,7 +440,7 @@ def received_ctrl():
 
     packet = PKT()
     start_time = time.time()
-    print("Control timer started: %0.3f s" & TCTRL)
+    print("Control timer started: %0.3f s"&(TCTRL))
     # While if still not TCTRL but something (wrong) received
     while(time.time()<start_time+TCTRL and not ctrl_rx):
         if(radio_Rx.available(0)):
