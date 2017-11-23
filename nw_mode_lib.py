@@ -131,7 +131,7 @@ def network_main():
     start_time = time.time()
 
     while(not radio_Rx.available(0) and time.time() < (start_time + TINIT)):
-        # sleep(0.2)
+        # time.sleep(0.2)
         pass
 
     if(not radio_Rx.available(0)):
@@ -463,7 +463,7 @@ def received_data():
     while(time.time()<start_time+TDATA):
         # while(not radio_Rx.available(0) or time.time()<start_time+TACK):
         #     pass
-            # sleep(0.1)
+            # time.sleep(0.1)
         
         if(radio_Rx.available(0)):
             packet = PKT()

@@ -8,13 +8,13 @@ try:
         packet = PKT()
         packet.generate_pkt(0)
 
-        sleep(2)
+        time.sleep(2)
         while(True):
             start_time = time.time()
             packet.send_pkt()
             while(not radio_Rx.available(0) and time.time() < start_time + 2):
                 #print("Nothing received :(")
-                sleep(0.1)
+                time.sleep(0.1)
 
 
             if radio_Rx.available(0):
