@@ -27,7 +27,7 @@ try:
 
             if(rx_ctrl):
                 # Control received. TX and NEXT updated.
-                print(packet.header)
+                #print(packet.header)
                 t_send_ack = random.uniform(0,0.05)
                 time.sleep(t_send_ack)
                 # Send ACK
@@ -36,6 +36,7 @@ try:
 
             else:
                 # Timeout
+                print("Timeout")
                 TX = MY_TEAM
                 NEXT = TEAM_D
                 SEND_CTRL = True

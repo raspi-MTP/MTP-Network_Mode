@@ -110,6 +110,13 @@ def init_comms():
     radio_Tx.openWritingPipe(PIPE_TX)
     radio_Rx.openReadingPipe(1, PIPE_RX)
 
+    print("Transmitter Details #################################################################################")
+    radio_Tx.printDetails()
+    print("*---------------------------------------------------------------------------------------------------*")
+    print("Receiver Details ####################################################################################")
+    radio_Rx.printDetails()
+    print("*---------------------------------------------------------------------------------------------------*")
+
     return 0
 
 
@@ -282,10 +289,12 @@ class PKT:
                         if(TX == TEAM_A):
                             # Team A --> ACK order: B, C, D --> header[6]
                             TX_ACK[0] = (self.header&2)/2
+                            print("Team A control received")
 
                         elif(TX == TEAM_B):
                             # Team B --> ACK order: A, C, D --> header[6]
                             TX_ACK[1] = (self.header&2)/2
+                            print("Team B control received")
 
                         elif(TX == TEAM_C):
                             # Team C --> ACK order: A, B, D --> Never here because previously checked (is not ACK)
@@ -294,6 +303,7 @@ class PKT:
                         elif(TX == TEAM_D):
                             # Team D --> ACK order: A, B, C --> header[7]
                             TX_ACK[2] = self.header&1
+                            print("Team D control received")
 
                         else:
                             # Never here
@@ -304,6 +314,9 @@ class PKT:
                                 TX_CMPLT += 1
                             else:
                                 TX_POS[TX] += 1
+
+                    elif(self.isACK())
+                        print("ACK to control received")
 
             else:
                 # Data packet
@@ -317,6 +330,8 @@ class PKT:
                 else:
                     self.payload = ''.join(self.frameData[1:])
                     self.payloadLength = len(self.payload)
+
+            return 0
 
 
     # Send given packet (frame payload)
@@ -397,14 +412,15 @@ def received_acks():
     while(acks < 3 or time.time()<start_time+TACK):
         if(radio_Rx.available(0)):       
             packet = PKT()
-            packet.read_pkt()
-            if(packet.is_ACK()):
-                # ACK to current Tx
-                acks += 1
+            if(packet.read_pkt() == 0):
+                if(packet.is_ACK()):
+                    # ACK to current Tx
+                    #print("ACK to control received")
+                    acks += 1
 
-            # else:
-            #     # Discarded. Do nothing.
-            #     pass
+                # else:
+                #     # Discarded. Do nothing.
+                #     pass
 
     if(acks < 2):
         # Channel not won
@@ -429,10 +445,11 @@ def received_ctrl():
     while(time.time()<start_time+TCTRL and not ctrl_rx):
         if(radio_Rx.available(0)):
             # Something received
-            packet.read_pkt()
-            if(packet.is_CTRL()):                    
-                # ACK info updated in read_pkt
-                ctrl_rx = True
+            print("Something received")
+            if(packet.read_pkt() == 0):
+                if(packet.is_CTRL()):                    
+                    # ACK info updated in read_pkt
+                    ctrl_rx = True
 
     return ctrl_rx, packet
 
@@ -450,20 +467,20 @@ def received_data():
         
         if(radio_Rx.available(0)):
             packet = PKT()
-            packet.read_pkt()
-            if(packet.is_my_data()):
-                # Data received
-                data_ok = True
-                if (packet.is_expected_data()):
-                    # Position + 1 for TX
-                    RX_POS[TX] += 1
-                    store_data(TX, packet.payload)
-                    if(RX_POS[TX] == POS_MAX):
-                            RX_CMPLT += 1
+            if(packet.read_pkt() == 0):
+                if(packet.is_my_data()):
+                    # Data received
+                    data_ok = True
+                    if (packet.is_expected_data()):
+                        # Position + 1 for TX
+                        RX_POS[TX] += 1
+                        store_data(TX, packet.payload)
+                        if(RX_POS[TX] == POS_MAX):
+                                RX_CMPLT += 1
 
-            # else:
-            #     # Discarded. Do nothing.
-            #     pass
+                # else:
+                #     # Discarded. Do nothing.
+                #     pass
 
     return data_ok
 
