@@ -84,7 +84,7 @@ def init_comms():
 
     # We choose the channels to be used for one and the other transceiver
     radio_Tx.setChannel(RF_CH)
-    radio_Rx.setChannel(RF_CH)
+    radio_Rx.setChannel(0)
 
     # Transmission Rate
     radio_Tx.setDataRate(BRATE)
