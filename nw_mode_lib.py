@@ -315,7 +315,7 @@ class PKT:
                             else:
                                 TX_POS[TX] += 1
 
-                    elif(self.isACK())
+                    elif(self.isACK()):
                         print("ACK to control received")
 
             else:
