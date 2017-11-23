@@ -25,7 +25,7 @@ try:
 
         # Passive mode
         while(True):
-            # rx_ctrl, packet = received_ctrl()
+            rx_ctrl, packet = received_ctrl()
 
             # if(rx_ctrl):
             #     # Control received. TX and NEXT updated.
@@ -42,13 +42,13 @@ try:
             #     TX = MY_TEAM
             #     NEXT = TEAM_D
             #     SEND_CTRL = True
-            if(radio_Rx.available(0)):
-                buf_rx = []
-                radio_Rx.read(buf_rx, radio_Rx.getDynamicPayloadSize())
-                str_frame = ""
-                for c in range(0, len(buf_rx)):
-                    str_frame += chr(buf[c])
-                print(str_frame)
+            # if(radio_Rx.available(0)):
+            #     buf_rx = []
+            #     radio_Rx.read(buf_rx, radio_Rx.getDynamicPayloadSize())
+            #     str_frame = ""
+            #     for c in range(0, len(buf_rx)):
+            #         str_frame += chr(buf[c])
+            #     print(str_frame)
 
 
     if __name__=='__main__':
