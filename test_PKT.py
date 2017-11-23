@@ -12,7 +12,7 @@ try:
         while(True):
             start_time = time.time()
             packet.send_pkt()
-            while(not radio_Rx.available(0) and time.time() < start_time + 2):
+            while(not radio_Rx.available(0) and time.time() < start_time + 10):
                 #print("Nothing received :(")
                 time.sleep(0.1)
 
