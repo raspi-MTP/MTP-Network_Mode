@@ -43,6 +43,7 @@ try:
             #     NEXT = TEAM_D
             #     SEND_CTRL = True
             if(radio_Rx.available(0)):
+                buf_rx = []
                 radio_Rx.read(buf_rx, radio_Rx.getDynamicPayloadSize())
                 str_frame = ""
                 for c in range(0, len(buf_rx)):
