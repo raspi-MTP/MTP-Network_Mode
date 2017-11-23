@@ -12,14 +12,14 @@ try:
         while(True):
             start_time = time.time()
             packet.send_pkt()
-            while(not radio_Rx.available(0) and time.time() < start_time + 2):
+            while(not radio_Rx.available(1) and time.time() < start_time + 2):
                 #print("Nothing received :(")
                 time.sleep(0.1)
 
 
-            if radio_Rx.available(0):
+            if radio_Rx.available(1):
+                packet.read_pkt()
                 print("Received ACK: "+packet.header)
-                #packet.read_pkt()
             else:
                 print("TIMEOUT")
 
