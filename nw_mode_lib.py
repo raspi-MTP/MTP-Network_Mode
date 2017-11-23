@@ -37,7 +37,7 @@ HDR_SIZE = 1                                # Header size inside payload frame
 PIPE_TX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # TX pipe address
 PIPE_RX = [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]    # RX pipe address
 GPIO_TX = 22                                # TX transceiver's CE to Raspberry GPIO
-GPIO_RX = 24                                # RX transceiver's CE to Raspberry GPIO
+GPIO_RX = 23                                # RX transceiver's CE to Raspberry GPIO
 WAITING_DATA = False                        # Flag to know whether data frame is expected or control, otherwise
 SEND_CTRL = False                           # Flag to know if control frame must be sent
 TEAM_A = 0
@@ -108,7 +108,7 @@ def init_comms():
 
     # Open the writing and reading pipe
     radio_Tx.openWritingPipe(PIPE_TX)
-    radio_Rx.openReadingPipe(1, PIPE_RX)
+    radio_Rx.openReadingPipe(0, PIPE_RX)
 
     print("Transmitter Details #################################################################################")
     radio_Tx.printDetails()
