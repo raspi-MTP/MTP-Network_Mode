@@ -47,7 +47,7 @@ try:
             #     radio_Rx.read(buf_rx, radio_Rx.getDynamicPayloadSize())
             #     str_frame = ""
             #     for c in range(0, len(buf_rx)):
-            #         str_frame += chr(buf[c])
+            #         str_frame += chr(buf_rx[c])
             #     print(str_frame)
 
 
