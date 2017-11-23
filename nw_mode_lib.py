@@ -410,7 +410,7 @@ def received_acks():
     acks = 0
     start_time = time.time()
     while(acks < 3 or time.time()<start_time+TACK):
-        if(radio_Rx.available(0)):       
+        if(radio_Rx.available([0])):       
             packet = PKT()
             if(packet.read_pkt() == 0):
                 if(packet.is_ACK()):
