@@ -74,7 +74,7 @@ def init_comms():
     GPIO.setup(GPIO_TX, GPIO.OUT)
     GPIO.output(GPIO_TX,1)
 
-    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (24)
+    # Enable transceivers with CE connected to GPIO_TX (22) and GPIO_RX (23)
     radio_Tx.begin(0, GPIO_TX)
     radio_Rx.begin(1, GPIO_RX)
 
