@@ -6,21 +6,21 @@ try:
 
         # Active mode
         packet = PKT()
-        packet.generate_pkt(0)
+        packet.generate_pkt(1,"0123456789012345678901234567890",0)
 
         #time.sleep(2)
         while(True):
+            # start_time = time.time()
             packet.send_pkt()
-            start_time = time.time()
-            while(not radio_Rx.available(0) and time.time() < start_time + 2):
-                #print("Nothing received :(")
-                time.sleep(0.01)
+            # while(not radio_Rx.available(0) and time.time() < start_time + 2):
+            #     #print("Nothing received :(")
+            #     time.sleep(0.01)
 
-            if radio_Rx.available(0):
-                packet.read_pkt()
-                print("Received ACK: "+packet.header)
-            else:
-                print("TIMEOUT")
+            # if radio_Rx.available(0):
+            #     packet.read_pkt()
+            #     print("Received ACK: "+packet.header)
+            # else:
+            #     print("TIMEOUT")
 
 
         # Passive mode
