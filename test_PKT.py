@@ -21,7 +21,10 @@ try:
                 pass
 
             if radio_Rx.available(0):
-                print("EUREKA!")
+                #print("EUREKA!")
+                rcv_buf = []
+                radio_Rx.read(rcv_buf, radio_Rx.getDynamicPayloadSize())
+                print(rcv_buf)
             else:
                 print("Timeout")
 
@@ -64,6 +67,6 @@ except KeyboardInterrupt:
     radio_Rx.end()
     radio_Tx.end()
 
-    # GPIO.output(23,0)
-    # GPIO.output(22,0)
+    GPIO.output(23,0)
+    GPIO.output(22,0)
     GPIO.cleanup()
