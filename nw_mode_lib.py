@@ -108,7 +108,7 @@ def init_comms():
 
     # Open the writing and reading pipe
     radio_Tx.openWritingPipe(PIPE_TX)
-    radio_Rx.openReadingPipe(0, PIPE_RX)
+    radio_Rx.openReadingPipe(3, PIPE_RX)
 
     print("Transmitter Details #################################################################################")
     radio_Tx.printDetails()
