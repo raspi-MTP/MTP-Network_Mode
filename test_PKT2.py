@@ -2,7 +2,7 @@ from nw_mode_lib import *
 
 try:
     def main():
-        #init_comms()
+        init_comms()
 
         # Active mode
         # packet = PKT()
