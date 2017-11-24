@@ -16,7 +16,7 @@ try:
             #     #print("Nothing received :(")
             #     time.sleep(0.01)
 
-            if radio_Rx.available(0):
+            if radio_Rx.available(3):
                 # packet.read_pkt()
                 print("Received packet")
             # else:
