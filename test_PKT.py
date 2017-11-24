@@ -27,21 +27,21 @@ try:
         while(True):
             rx_ctrl, packet = received_ctrl()
 
-            # if(rx_ctrl):
-            #     # Control received. TX and NEXT updated.
-            #     #print(packet.header)
-            #     t_send_ack = random.uniform(0,0.05)
-            #     time.sleep(t_send_ack)
-            #     # Send ACK
-            #     send_ack(packet)
-            #     WAITING_DATA = True
+            if(rx_ctrl):
+                # Control received. TX and NEXT updated.
+                #print(packet.header)
+                t_send_ack = random.uniform(0,0.05)
+                time.sleep(t_send_ack)
+                # Send ACK
+                send_ack(packet)
+                WAITING_DATA = True
 
-            # else:
-            #     # Timeout
-            #     print("Timeout")
-            #     TX = MY_TEAM
-            #     NEXT = TEAM_D
-            #     SEND_CTRL = True
+            else:
+                # Timeout
+                print("Timeout")
+                TX = MY_TEAM
+                NEXT = TEAM_D
+                SEND_CTRL = True
             # if(radio_Rx.available(0)):
             #     buf_rx = []
             #     radio_Rx.read(buf_rx, radio_Rx.getDynamicPayloadSize())
