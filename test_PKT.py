@@ -6,7 +6,7 @@ try:
 
         # Active mode
         packet = PKT()
-        packet.generate_pkt(1,"0123456789012345678901234567890",0)
+        packet.generate_pkt(0)
 
         #time.sleep(2)
         while(True):
