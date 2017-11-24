@@ -16,7 +16,7 @@ try:
             #     #print("Nothing received :(")
             #     time.sleep(0.01)
 
-            while( not radio_Rx.available(0)  and time.time() < start_time+1):
+            if(not radio_Rx.available(0)  and time.time() < start_time+1):
                 #print("Waiting")
                 pass
 
