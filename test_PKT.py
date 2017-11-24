@@ -25,7 +25,7 @@ try:
 
         # Passive mode
         while(True):
-            rx_ctrl, packet = received_ctrl()
+            #rx_ctrl, packet = received_ctrl()
 
             # if(rx_ctrl):
             #     # Control received. TX and NEXT updated.
