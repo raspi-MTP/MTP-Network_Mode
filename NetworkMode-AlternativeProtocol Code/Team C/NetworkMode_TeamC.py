@@ -33,7 +33,7 @@ pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
 
 # Setup Transceiver 1: Transmitter
 radio = NRF24(GPIO, spidev.SpiDev())
-radio.begin(0, 17)
+radio.begin(0, 22)
 radio.setPayloadSize(32)
 radio.setChannel(chtx)
 radio.setDataRate(NRF24.BR_250KBPS)
@@ -44,7 +44,7 @@ radio.enableAckPayload()
 
 # Setup Transceiver 2: Receiver
 radio2 = NRF24(GPIO, spidev.SpiDev())
-radio2.begin(1, 27)
+radio2.begin(1, 23)
 radio2.setPayloadSize(32)
 radio2.setChannel(chrx)
 radio2.setDataRate(NRF24.BR_250KBPS)
