@@ -6,7 +6,7 @@ import time
 
 def main():
     # Network variables
-    dilationFactor = 40
+    dilationFactor = 5
     networkSize = 3
 
     print("Hello from the Network Mode")
