@@ -138,7 +138,7 @@ class Radio(object):
                 return 0, None
             else:
                 # Read the buffer and return in if something arrived
-                self.radio.read(buf, self.radio.getDynamicPayload())
+                self.radio.read(buf, self.radio.getDynamicPayloadSize())
                 print("\n-Receiving-\n")
                 print(buf)
                 self.radio.stopListening()
