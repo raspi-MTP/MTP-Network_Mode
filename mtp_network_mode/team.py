@@ -31,14 +31,16 @@ class Team(object):
         self.pipeRX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]
         self.pipeTX = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]
 
-        pinTX = int(raw_input("In which GPIO port did you connect the TX?"))
-        pinRX = int(raw_input("In which GPIO port did you connect the RX?"))
+        pinTX = int(raw_input("In which GPIO port did you connect the CE TX?"))
+        pinValTx = int(raw_input("Value to set CS TX?"))
+        pinRX = int(raw_input("In which GPIO port did you connect the CE RX?"))
+        pinValRx = int(raw_input("Value to set CS RX?"))
 
         # pinTX = 27
         # pinRX = 17
 
-        self.radioTX = radio.Radio(self.pipeTX, rx=False, pin=pinTX, teamID=self.teamID, UDP=UDP)
-        self.radioRX = radio.Radio(self.pipeRX, rx=True, pin=pinRX, teamID=self.teamID, UDP=UDP)
+        self.radioTX = radio.Radio(self.pipeTX, rx=False, pins=[pinValTx, pinTX], teamID=self.teamID, UDP=UDP)
+        self.radioRX = radio.Radio(self.pipeRX, rx=True, pins=[pinValRx, pinRX] teamID=self.teamID, UDP=UDP)
 
     def waitControl(self, timeout=None):
         startTime = time.time()

@@ -5,7 +5,7 @@ import random
 
 class Radio(object):
 
-    def __init__(self, pipes, rx, pin, teamID, UDP=False):
+    def __init__(self, pipes, rx, pins, teamID, UDP=False):
         # ### Radio interfaces ####
         self.UDP = UDP
         self.teamID = teamID
@@ -63,12 +63,9 @@ class Radio(object):
             self.radio = NRF24(GPIO, spidev.SpiDev())
             # self.radio.begin(1, 27)
 
-            if rx:
-                GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
-                self.radio.begin(1,pin)
-            else:
-                GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
-                self.radio.begin(0,pin)
+
+            GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
+            self.radio.begin(pins[0],pins[1])
             
             time.sleep(1)
 
@@ -141,7 +138,7 @@ class Radio(object):
                 return 0, None
             else:
                 # Read the buffer and return in if something arrived
-                self.radio.read(buf)
+                self.radio.read(buf, self.radio.getDynamicPayload())
                 print("\n-Receiving-\n")
                 print(buf)
                 self.radio.stopListening()
