@@ -64,7 +64,7 @@ class Radio(object):
             # self.radio.begin(1, 27)
 
 
-            GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
+            GPIO.setup(pins[1], GPIO.OUT, initial=GPIO.LOW)
             self.radio.begin(pins[0],pins[1])
             
             time.sleep(1)
