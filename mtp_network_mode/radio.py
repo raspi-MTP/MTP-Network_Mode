@@ -65,10 +65,10 @@ class Radio(object):
 
             if rx:
                 GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
-                self.radio.begin(0,pin)
+                self.radio.begin(1,pin)
             else:
                 GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
-                self.radio.begin(1,pin)
+                self.radio.begin(0,pin)
             
             time.sleep(1)
 
