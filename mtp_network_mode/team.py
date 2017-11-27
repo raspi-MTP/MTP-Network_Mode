@@ -40,7 +40,7 @@ class Team(object):
         # pinRX = 17
 
         self.radioTX = radio.Radio(self.pipeTX, rx=False, pins=[pinValTx, pinTX], teamID=self.teamID, UDP=UDP)
-        self.radioRX = radio.Radio(self.pipeRX, rx=True, pins=[pinValRx, pinRX] teamID=self.teamID, UDP=UDP)
+        self.radioRX = radio.Radio(self.pipeRX, rx=True, pins=[pinValRx, pinRX], teamID=self.teamID, UDP=UDP)
 
     def waitControl(self, timeout=None):
         startTime = time.time()
